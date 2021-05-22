@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;xemxx.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Pisces&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12,&quot;onmobile&quot;:false},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;slideDownIn&quot;,&quot;post_body&quot;:&quot;slideDownIn&quot;,&quot;coll_header&quot;:&quot;slideLeftIn&quot;,&quot;sidebar&quot;:&quot;slideUpIn&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="变量类型转换作为静态语言，GO具有固定的数据类型，类型决定了变量内存的长度和存储格式 所以我们只能修改变量值，但是无法改变其类型  通过类型转换或者指针操作，我们可用不同的方式修改变量值，但是我们并没有改变其本身变量类型，例如： 1234var a bytea&#x3D;1b:&#x3D;3.0+float64(a)print(&quot;%T,%f\n&quot;,b,b)  结果输出： float64,4.000">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Xem Blog">
+<meta property="og:url" content="https://xemxx.github.io/%E5%BE%85%E5%8F%91%E5%B8%83/golang/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="变量类型转换作为静态语言，GO具有固定的数据类型，类型决定了变量内存的长度和存储格式 所以我们只能修改变量值，但是无法改变其类型  通过类型转换或者指针操作，我们可用不同的方式修改变量值，但是我们并没有改变其本身变量类型，例如： 1234var a bytea&#x3D;1b:&#x3D;3.0+float64(a)print(&quot;%T,%f\n&quot;,b,b)  结果输出： float64,4.000">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20191030205931.png?imageslim">
+<meta property="article:published_time" content="2021-05-20T18:11:00.358Z">
+<meta property="article:modified_time" content="2021-05-20T18:11:00.358Z">
+<meta property="article:author" content="Xem">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/20191030205931.png?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/%E5%BE%85%E5%8F%91%E5%B8%83/golang/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:false,&quot;lang&quot;:&quot;en&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;xemxx.github.io&#x2F;%E5%BE%85%E5%8F%91%E5%B8%83&#x2F;golang&#x2F;%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B.html&quot;,&quot;path&quot;:&quot;待发布&#x2F;golang&#x2F;学习笔记-数据类型.html&quot;,&quot;title&quot;:&quot;&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title> | Xem Blog
+</title><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Xem Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%98%E9%87%8F"><span class="nav-text">变量</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-text">类型转换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-text">定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E5%8F%98%E9%87%8F%E8%B5%8B%E5%80%BC"><span class="nav-text">多变量赋值</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E5%90%8D"><span class="nav-text">命名</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E8%A7%84%E5%88%99"><span class="nav-text">命名规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A9%BA%E6%A0%87%E8%AF%86%E7%AC%A6"><span class="nav-text">空标识符</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E9%87%8F"><span class="nav-text">常量</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89-1"><span class="nav-text">定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9E%9A%E4%B8%BE"><span class="nav-text">枚举</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%A0%E7%B1%BB%E5%9E%8B%E5%B8%B8%E9%87%8F%EF%BC%88%E5%B8%B8%E9%87%8F%E5%B1%95%E5%BC%80%EF%BC%89"><span class="nav-text">无类型常量（常量展开）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B"><span class="nav-text">基本类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-text">概述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%83%E5%B0%94%E7%B1%BB%E5%9E%8B"><span class="nav-text">布尔类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B4%E5%BD%A2"><span class="nav-text">整形</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E5%9E%8B"><span class="nav-text">浮点型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%8D%E6%95%B0"><span class="nav-text">复数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-text">字符串</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B"><span class="nav-text">引用类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B"><span class="nav-text">自定义类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2-1"><span class="nav-text">类型转换</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner page posts-expand">
+  
+  
+
+
+    
+    
+    
+    <div class="post-block" lang="en"><header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">
+</h1>
+
+<div class="post-meta-container">
+  <ul class="breadcrumb">
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/">待发布</a></li>
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/golang/">GOLANG</a></li>
+            <li>学习笔记-数据类型</li>
+          
+  </ul>
+</div>
+
+</header>
+
+      
+      
+      <div class="post-body">
+          <h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><h4 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h4><p>作为静态语言，GO具有固定的数据类型，类型决定了变量内存的长度和存储格式</p>
+<p>所以我们只能修改变量值，但是无法改变其类型</p>
+<blockquote>
+<p>通过类型转换或者指针操作，我们可用不同的方式修改变量值，但是我们并没有改变其本身变量类型，例如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="keyword">byte</span></span><br><span class="line">a=<span class="number">1</span></span><br><span class="line">b:=<span class="number">3.0</span>+<span class="keyword">float64</span>(a)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;%T,%f\n&quot;</span>,b,b)</span><br></pre></td></tr></table></figure>
+
+<p>结果输出：</p>
+<p><code>float64,4.000000</code></p>
+<p>这里我们只是将a从byte的 1 变成了float64的1.000000并相加赋予了b，a本身的类型没有变化，只是相对于3.0来说可以满足同类型相加的规则，即对于浮点数来说可读了，所以能相加并且赋予b</p>
+<p>简单说就是一个翻译机器翻译了你的话，但是你说出的话并不是被改变了，相当于基于你的话生成了一份另一种语言的版本</p>
+</blockquote>
+<h4 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h4><p>关键字var用于定义变量，类型位于变量名后方，并且如果声明时未赋予值，内存分配操作会自动赋予二进制零值<code>zero value</code>，如果显式提供初始化值，则可忽略变量类型，由编译器推断</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> c,v = <span class="number">100</span>,<span class="string">&quot;abc&quot;</span></span><br><span class="line"><span class="keyword">var</span> y = <span class="literal">false</span> </span><br><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	x,y <span class="keyword">int</span></span><br><span class="line">  a,s = <span class="number">100</span>,<span class="string">&quot;abc&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>此外有简短模式：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">z:= <span class="number">3.0</span> </span><br><span class="line">a,b:=<span class="number">1</span>,<span class="number">3</span> </span><br></pre></td></tr></table></figure>
+
+<p>但是存在限制：</p>
+<ul>
+<li>必须提供初始值</li>
+<li>不能提供数据类型</li>
+<li>不能用于全局变量</li>
+</ul>
+<p>其中不能用于全局变量就代表了全局变量只能用关键字<code>var</code>来定义</p>
+<p>同时简短模式有特例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">x:=<span class="number">100</span></span><br><span class="line">y,x:=<span class="string">&quot;yyy&quot;</span>,<span class="string">&quot;200&quot;</span> <span class="comment">//此时x的:=操作会被退化为赋值操作，但是y依旧是变量定义</span></span><br></pre></td></tr></table></figure>
+
+<p>退化赋值的前提是：至少有一个新变量被定义，并且是同一作用域，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">x:=<span class="number">100</span></span><br><span class="line"><span class="built_in">println</span>(&amp;x) <span class="comment">//out:0xc000042748</span></span><br><span class="line">&#123;</span><br><span class="line">  x,y:=<span class="number">200</span>,<span class="number">300</span></span><br><span class="line">  <span class="built_in">println</span>(&amp;x,&amp;y) <span class="comment">//out:0xc000042740 0xc000042738</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//可以发现前后x的地址不同，代表是不同变量</span></span><br></pre></td></tr></table></figure>
+
+<p>退化赋值的常用场景是错误处理的<code>err</code>变量的重复使用</p>
+<h4 id="多变量赋值"><a href="#多变量赋值" class="headerlink" title="多变量赋值"></a>多变量赋值</h4><p>进行多变量赋值时，是首先计算出所有右边的值，然后依次完成赋值操作如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">x,y:=<span class="number">1</span>,<span class="number">2</span></span><br><span class="line">x,y=y+<span class="number">3</span>,x+<span class="number">2</span></span><br><span class="line"><span class="built_in">println</span>(x,y)	<span class="comment">//out:5,3</span></span><br></pre></td></tr></table></figure>
+
+<p>很常用的一个操作就是我们在交换两个值时可以直接<code>x,y=y,x</code></p>
+<h2 id="命名"><a href="#命名" class="headerlink" title="命名"></a>命名</h2><h4 id="命名规则"><a href="#命名规则" class="headerlink" title="命名规则"></a>命名规则</h4><ul>
+<li>以字母或者下划线开始，由字母，数字，下划线组成</li>
+<li>区分大小写</li>
+<li>使用驼峰拼写格式</li>
+<li>局部变量优先使用短名（简单举例：<code>for i:=0;i&lt;10;i++</code> 这里的i代表index，但是推荐用i，因为它只在这个循环内有用）</li>
+<li>保留关键字不能用</li>
+<li>不建议使用与预定义变量、类型、内置函数相同的名字（因为包的原因，我们时可以覆盖使用的，但是还是不建议，这里注意区分保留关键字）</li>
+</ul>
+<p>有趣的点是：支持汉字等Unicode字符命名，但是这并不是一个好习惯（这里是因为编译后的机器码并不使用变量名，而是直接操作内存地址，所以只要在语言层面支持对应的字符集的校验规则即可）</p>
+<p>此外还有在golang中，首字母的大小写决定了其作用域，首字母大写的为导出成员，可以被包外引用，但是汉字在Unicode中都视为小写，相关细节后序再讲。</p>
+<h4 id="空标识符"><a href="#空标识符" class="headerlink" title="空标识符"></a>空标识符</h4><p><code>_</code>为变量中的特殊成员。通常作为忽略占位符使用，但是我们无法对其做任何修改，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">x,_:=strconv.Atoi(<span class="string">&quot;12&quot;</span>) <span class="comment">//此时忽略Atoi的err返回值,防止我们不处理err而报错</span></span><br><span class="line"><span class="built_in">println</span>(x)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="常量"><a href="#常量" class="headerlink" title="常量"></a>常量</h2><p>常量值必须是编译期可确定对的字符、字符串、数字或者布尔值，可以指定类型或者通过初始值推断，但是不支持c/c++数字类型后缀</p>
+<h4 id="定义-1"><a href="#定义-1" class="headerlink" title="定义"></a>定义</h4><p>和变量不同的是：</p>
+<ul>
+<li>必须赋予初始值</li>
+<li>关键字由<code>var</code>变为<code>const</code></li>
+<li>不支持简短操作<code>:=</code></li>
+<li>不使用的常量不会引发编译错误</li>
+</ul>
+<p>再次强调一点，定义的值必须在编译期可确定，即赋值时表达式右值不能含有变量，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">x := <span class="string">&quot;123&quot;</span></span><br><span class="line"><span class="keyword">const</span> y = <span class="built_in">len</span>(x) <span class="comment">//panic:const initializer len(x) is not a constant</span></span><br><span class="line"><span class="keyword">const</span> z = <span class="built_in">len</span>(<span class="string">&quot;123&quot;</span>) <span class="comment">//合法语句</span></span><br></pre></td></tr></table></figure>
+
+<p>此外在常量组定义中有如下规则：如不指定类型和初始值，则与上一行非空常量右值相同</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">		x <span class="keyword">uint16</span> = <span class="number">120</span></span><br><span class="line">		y</span><br><span class="line">		s = <span class="string">&quot;abc&quot;</span></span><br><span class="line">		z</span><br><span class="line">	)</span><br><span class="line">fmt.Printf(<span class="string">&quot;%T,%v\n&quot;</span>, y, y) <span class="comment">//out: uint16,120</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;%T,%v\n&quot;</span>, z, z) <span class="comment">//out: string,abc</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h4><p>本人并不了解其他语言的枚举实现，所以此处只讲述GO的iota标识符</p>
+<p>GO可以借助iota标识符实现一组自增常量值来实现枚举类型：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">		x =<span class="literal">iota</span> <span class="comment">//0</span></span><br><span class="line">		y				<span class="comment">//1</span></span><br><span class="line">		z				<span class="comment">//2</span></span><br><span class="line">	)</span><br></pre></td></tr></table></figure>
+
+<p>自增的作用范围仅为当前常量组，所以可以实现多常量定义：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">		_, _ = <span class="literal">iota</span>, <span class="literal">iota</span> * <span class="number">10</span> <span class="comment">//0,0*10</span></span><br><span class="line">		a, b                   <span class="comment">//1,1*10</span></span><br><span class="line">		c, d                   <span class="comment">//2,2*10</span></span><br><span class="line">	)</span><br></pre></td></tr></table></figure>
+
+<p>此外，iota的自增可以中断，但是iota依旧会根据行序自增，并且需要显式恢复：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">		a = <span class="literal">iota</span> <span class="comment">//0</span></span><br><span class="line">		b        <span class="comment">//1</span></span><br><span class="line">		c = <span class="number">100</span>  <span class="comment">//100</span></span><br><span class="line">		d        <span class="comment">//100</span></span><br><span class="line">		e = <span class="literal">iota</span> <span class="comment">//4</span></span><br><span class="line">		f        <span class="comment">//5</span></span><br><span class="line">	)</span><br></pre></td></tr></table></figure>
+
+<p>自增的默认数据类型为int，但是可以手动指定类型</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">		a         = <span class="literal">iota</span> <span class="comment">//int</span></span><br><span class="line">		b <span class="keyword">float64</span> = <span class="literal">iota</span> <span class="comment">//float64</span></span><br><span class="line">		c         = <span class="literal">iota</span> <span class="comment">//int(如不显式指定iota,则与b数据类型相同)</span></span><br><span class="line">	)</span><br></pre></td></tr></table></figure>
+
+<h4 id="无类型常量（常量展开）"><a href="#无类型常量（常量展开）" class="headerlink" title="无类型常量（常量展开）"></a>无类型常量（常量展开）</h4><p>以下出自<a target="_blank" rel="noopener" href="https://yar999.gitbooks.io/gopl-zh/content/ch3/ch3-06.html">go语言圣经</a></p>
+<blockquote>
+<p>首先有一个例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    _ = <span class="number">1</span> &lt;&lt; (<span class="number">10</span> * <span class="literal">iota</span>)</span><br><span class="line">    KiB <span class="comment">// 1024</span></span><br><span class="line">    MiB <span class="comment">// 1048576</span></span><br><span class="line">    GiB <span class="comment">// 1073741824</span></span><br><span class="line">    TiB <span class="comment">// 1099511627776             (exceeds 1 &lt;&lt; 32)</span></span><br><span class="line">    PiB <span class="comment">// 1125899906842624</span></span><br><span class="line">    EiB <span class="comment">// 1152921504606846976</span></span><br><span class="line">    ZiB <span class="comment">// 1180591620717411303424    (exceeds 1 &lt;&lt; 64)</span></span><br><span class="line">    YiB <span class="comment">// 1208925819614629174706176</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>Go语言的常量有个不同寻常之处。虽然一个常量可以有任意有一个确定的基础类型，例如int或float64，或者是类似time.Duration这样命名的基础类型，但是许多常量并没有一个明确的基础类型。编译器为这些没有明确的基础类型的数字常量提供比基础类型更高精度的算术运算；你可以认为至少有256bit的运算精度。这里有六种未明确类型的常量类型，分别是无类型的布尔型、无类型的整数、无类型的字符、无类型的浮点数、无类型的复数、无类型的字符串。</p>
+<p>通过延迟明确常量的具体类型，无类型的常量不仅可以提供更高的运算精度，而且可以直接用于更多的表达式而不需要显式的类型转换。例如，例子中的ZiB和YiB的值已经超出任何Go语言中整数类型能表达的范围，但是它们依然是合法的常量，而且可以像下面常量表达式依然有效（译注：YiB/ZiB是在编译期计算出来的，并且结果常量是1024，是Go语言int变量能有效表示的）：</p>
+<p>另一个例子，math.Pi无类型的浮点数常量，可以直接用于任意需要浮点数或复数的地方：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmt.Println(YiB/ZiB) <span class="comment">// &quot;1024&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>math.Pi无类型的浮点数常量，可以直接用于任意需要浮点数或复数的地方：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="keyword">float32</span> = math.Pi</span><br><span class="line"><span class="keyword">var</span> y <span class="keyword">float64</span> = math.Pi</span><br><span class="line"><span class="keyword">var</span> z <span class="keyword">complex128</span> = math.Pi</span><br></pre></td></tr></table></figure>
+
+<p>（有需要请自己阅读）</p>
+</blockquote>
+<p>简单说就是如果一个常量在定义时没有一个明确的基础类型，那么在常量被使用时可以被隐式转换，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> x = <span class="number">100</span></span><br><span class="line"><span class="keyword">const</span> y <span class="keyword">byte</span> = x <span class="comment">// 直接展开x，相当于 const y byte=100，也可以理解为隐式转换</span></span><br><span class="line"><span class="keyword">const</span> a <span class="keyword">int</span> = <span class="number">100</span></span><br><span class="line"><span class="keyword">const</span> b <span class="keyword">byte</span> = a <span class="comment">// panic : cannot use a (type int) as type byte in const initializer</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="基本类型"><a href="#基本类型" class="headerlink" title="基本类型"></a>基本类型</h2><h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><blockquote>
+<p>本想着截图的，，，但是实在是不够满意他们的解释，想着自己弄一个，大部分可以参考golang的官方godoc，同时源码也有相应注释路径：<code>$GOROOT/src/builtin/builtin.go</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>长度（字节）</th>
+<th>默认值（零值）</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>bool</td>
+<td>1</td>
+<td>false</td>
+<td>true和false实际都是常量</td>
+</tr>
+<tr>
+<td>int/uint</td>
+<td>4,8</td>
+<td>0</td>
+<td>默认的整数类型，根据目标平台，32位或者64位分别占用4个字节和8个字节</td>
+</tr>
+<tr>
+<td>int8/uint8</td>
+<td>1</td>
+<td>0</td>
+<td>占用8位二进制数的整形，-128<del>127,0</del>255</td>
+</tr>
+<tr>
+<td>int16/uint16</td>
+<td>2</td>
+<td>0</td>
+<td>16位，-32768<del>32767，0</del>65535</td>
+</tr>
+<tr>
+<td>int32/uint32</td>
+<td>4</td>
+<td>0</td>
+<td>32位，-21亿<del>21亿，0</del>43亿</td>
+</tr>
+<tr>
+<td>int64/uint64</td>
+<td>8</td>
+<td>0</td>
+<td>64位，-2^63<del>2^63,0</del>2^64</td>
+</tr>
+<tr>
+<td>uintptr</td>
+<td>4,8</td>
+<td>0</td>
+<td>足以存储指针的uint，根据目标平台，32位或者64位分别占用4个字节和8个字节</td>
+</tr>
+<tr>
+<td>byte</td>
+<td>1</td>
+<td>0</td>
+<td>字节类型，事实上是uint8的别名</td>
+</tr>
+<tr>
+<td>rune</td>
+<td>4</td>
+<td>0</td>
+<td>该类型是GO语言定义的特有数据类型，专门用于存储unicode字符，在实现中是int32的别名</td>
+</tr>
+<tr>
+<td>float32</td>
+<td>4</td>
+<td>0.0</td>
+<td>占用32位二进制数的浮点型数据</td>
+</tr>
+<tr>
+<td>float64</td>
+<td>8</td>
+<td>0.0</td>
+<td>64位，默认浮点类型</td>
+</tr>
+<tr>
+<td>complex64</td>
+<td>8</td>
+<td>0.0+0.0i</td>
+<td>占用64位二进制数的复数类型，由float32类型的实部和虚部联合表示</td>
+</tr>
+<tr>
+<td>complex128</td>
+<td>16</td>
+<td>0.0+0.0i</td>
+<td>128位，float64</td>
+</tr>
+<tr>
+<td>string</td>
+<td></td>
+<td>“”</td>
+<td>字符串类型，默认空字符串</td>
+</tr>
+<tr>
+<td>array</td>
+<td></td>
+<td></td>
+<td>数组</td>
+</tr>
+<tr>
+<td>struct</td>
+<td></td>
+<td></td>
+<td>结构体</td>
+</tr>
+<tr>
+<td>function</td>
+<td></td>
+<td>nil</td>
+<td>函数</td>
+</tr>
+<tr>
+<td>interface</td>
+<td></td>
+<td>nil</td>
+<td>接口</td>
+</tr>
+<tr>
+<td>map</td>
+<td></td>
+<td>nil</td>
+<td>字典，引用类型</td>
+</tr>
+<tr>
+<td>slice</td>
+<td></td>
+<td>nil</td>
+<td>切片，引用类型</td>
+</tr>
+<tr>
+<td>channel</td>
+<td></td>
+<td>nil</td>
+<td>通道，引用类型</td>
+</tr>
+</tbody></table>
+<h4 id="布尔类型"><a href="#布尔类型" class="headerlink" title="布尔类型"></a>布尔类型</h4><p>这里应该知道的是在GO中，true和false是两个语言标识符，也可以说是表达式常量，因为它在源码中是这样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// bool is the set of boolean values, true and false.</span></span><br><span class="line"><span class="keyword">type</span> <span class="keyword">bool</span> <span class="keyword">bool</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// true and false are the two untyped boolean values.</span></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	<span class="literal">true</span>  = <span class="number">0</span> == <span class="number">0</span> <span class="comment">// Untyped bool.</span></span><br><span class="line">	<span class="literal">false</span> = <span class="number">0</span> != <span class="number">0</span> <span class="comment">// Untyped bool.</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>所以任何一个bool类型的变量是无法与整数类型转换的</p>
+<h4 id="整形"><a href="#整形" class="headerlink" title="整形"></a>整形</h4><p>首先是最基本的范围，可以在GO的math包中看到</p>
+<p><img src="http://qiniu.xemxx.cn/20191030205931.png?imageslim"></p>
+<p>此外整数类型支持位操作，也是在GO中唯一支持位操作的类型，并且在1.13之前被操作数只能是无符号整数，但是在1.13之后是支持有符号类型整数作为被操作数的</p>
+<p>同时在1.13之前的golang仅支持10进制和16进制的字面量，现在新加入了对二进制和八进制的字面量支持：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">fmt.Println(<span class="number">0</span>b101)</span><br><span class="line">fmt.Println(<span class="number">0</span>o10)</span><br></pre></td></tr></table></figure>
+
+<p><code>0b</code>和<code>0B</code>代表二进制，<code>0o</code>和<code>0O</code>代表八进制</p>
+<p>但是不支持字面量不代表它不支持二进制和八进制的数值表示，这里在后面的类型转换将提到</p>
+<h4 id="浮点型"><a href="#浮点型" class="headerlink" title="浮点型"></a>浮点型</h4><p>这里需要注意主要是精度丢失的问题，这应该是很多语言都有的共同问题，默认的字面量都将被推断为float64，具体参考IEEE-754标准</p>
+<p>因为精度会丢失，所以不应该简单的使用==或者!=来比较，而应该使用math标准库</p>
+<h4 id="复数"><a href="#复数" class="headerlink" title="复数"></a>复数</h4><p>主要是有三个默认函数：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> v = comlex(<span class="number">2.1</span>, <span class="number">3</span>) <span class="comment">//构造一个复数</span></span><br><span class="line">a := <span class="built_in">real</span>(v)           <span class="comment">//返回复数实部</span></span><br><span class="line">b := image(v)          <span class="comment">//返回复数虚部</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h4><p>GO语言将字符串作为一种原生的基本数据类型，这里主要是基本的了解，具体的使用涉及到rune和byte两种类型与string之间的转换，到后面再看</p>
+<h4 id="引用类型"><a href="#引用类型" class="headerlink" title="引用类型"></a>引用类型</h4><p>所谓引用类型主要是指slice、map、channel三种预定义类型</p>
+<p>这三种类型主要是相比于数字、数组等类型有更加复杂的存储结构</p>
+<p>对于引用类型来说必须使用make函数创建，编译器会将make转换为目标类型专用的创建函数（或指令），以确保完成全部内存分配，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>, <span class="number">10</span>)   <span class="comment">//创建了一个容量为10长度为0的slice</span></span><br><span class="line">m := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">int</span>) <span class="comment">//创建了一个空map</span></span><br></pre></td></tr></table></figure>
+
+<p>此外也可以采用初始化表达式来创建，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">s := []<span class="keyword">int</span>&#123;&#125;          <span class="comment">//创建了一个容量为0长度为0的slice</span></span><br><span class="line">m := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">int</span>&#123;&#125; <span class="comment">//创建了一个空map</span></span><br></pre></td></tr></table></figure>
+
+<p>事实上new也可以为引用类型分配内存，但是不能完整创建。比如map，仅分配了字典类型本身所需内存，但是没有分配键值存储内存，也没有初始化内部散列桶等内部属性，因此无法正常工作</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">p := <span class="built_in">new</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">int</span>)</span><br><span class="line">m := *p</span><br><span class="line">m[<span class="string">&quot;a&quot;</span>] = <span class="number">1</span> <span class="comment">//panic: assignment to entry in nil map</span></span><br><span class="line">fmt.Println(m)</span><br></pre></td></tr></table></figure>
+
+<p>如果对结构体有所了解，可以理解为new仅分配了外部结构体的成员变量所需空间，如果内部存在指针成员变量，new就不会为其预分配指向空间，所以需要用make来触发特定的初始化操作，这里后序再继续学习，，，</p>
+<h4 id="自定义类型"><a href="#自定义类型" class="headerlink" title="自定义类型"></a>自定义类型</h4><p>关键字<code>type</code>定义用户自定义类型，包括基于现有的基础类型创建，或者是结构体，函数类型等，如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> flags <span class="keyword">byte</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="类型转换-1"><a href="#类型转换-1" class="headerlink" title="类型转换"></a>类型转换</h4><p>除常量、别名类型以及未命名类型外，Go强制要求使用显式类型转换。</p>
+
+      </div>
+      
+      
+      
+    </div>
+  <ul class="breadcrumb">
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/">待发布</a></li>
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/golang/">GOLANG</a></li>
+            <li>学习笔记-数据类型</li>
+          
+  </ul>
+
+    
+    
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">66k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:01</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

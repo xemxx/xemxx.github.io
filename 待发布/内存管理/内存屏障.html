@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;xemxx.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Pisces&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12,&quot;onmobile&quot;:false},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;slideDownIn&quot;,&quot;post_body&quot;:&quot;slideDownIn&quot;,&quot;coll_header&quot;:&quot;slideLeftIn&quot;,&quot;sidebar&quot;:&quot;slideUpIn&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="定义内存屏障是硬件之上、操作系统或JVM之下，对并发作出的最后一层支持。再向下是是硬件提供的支持；向上是操作系统或JVM对内存屏障作出的各种封装。内存屏障是一种标准，各厂商可能采用不同的实现。 内存屏障的实现涉及大量硬件架构层面的知识，又需要操作系统或JVM的配合才能发挥威力，单纯从任何一个层面都无法理解。本文只是简单了解，并不做深度讨论 可见性与重排序内存屏障的存在就是为了解决可见性与重排序的问">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Xem Blog">
+<meta property="og:url" content="https://xemxx.github.io/%E5%BE%85%E5%8F%91%E5%B8%83/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="定义内存屏障是硬件之上、操作系统或JVM之下，对并发作出的最后一层支持。再向下是是硬件提供的支持；向上是操作系统或JVM对内存屏障作出的各种封装。内存屏障是一种标准，各厂商可能采用不同的实现。 内存屏障的实现涉及大量硬件架构层面的知识，又需要操作系统或JVM的配合才能发挥威力，单纯从任何一个层面都无法理解。本文只是简单了解，并不做深度讨论 可见性与重排序内存屏障的存在就是为了解决可见性与重排序的问">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200206224737.png?imageslim">
+<meta property="article:published_time" content="2021-05-20T18:11:00.718Z">
+<meta property="article:modified_time" content="2021-05-20T18:11:00.718Z">
+<meta property="article:author" content="Xem">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/20200206224737.png?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/%E5%BE%85%E5%8F%91%E5%B8%83/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:false,&quot;lang&quot;:&quot;en&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;xemxx.github.io&#x2F;%E5%BE%85%E5%8F%91%E5%B8%83&#x2F;%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86&#x2F;%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C.html&quot;,&quot;path&quot;:&quot;待发布&#x2F;内存管理&#x2F;内存屏障.html&quot;,&quot;title&quot;:&quot;&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title> | Xem Blog
+</title><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Xem Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E8%A7%81%E6%80%A7%E4%B8%8E%E9%87%8D%E6%8E%92%E5%BA%8F"><span class="nav-text">可见性与重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E8%A7%81%E6%80%A7"><span class="nav-text">可见性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89-1"><span class="nav-text">定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E6%9D%A5%E6%BA%90"><span class="nav-text">问题来源</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E6%8E%92%E5%BA%8F"><span class="nav-text">重排序</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89-2"><span class="nav-text">定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E6%9D%A5%E6%BA%90-1"><span class="nav-text">问题来源</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">25</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner page posts-expand">
+  
+  
+
+
+    
+    
+    
+    <div class="post-block" lang="en"><header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">
+</h1>
+
+<div class="post-meta-container">
+  <ul class="breadcrumb">
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/">待发布</a></li>
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">内存管理</a></li>
+            <li>内存屏障</li>
+          
+  </ul>
+</div>
+
+</header>
+
+      
+      
+      <div class="post-body">
+          <h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>内存屏障是硬件之上、操作系统或JVM之下，对并发作出的最后一层支持。再向下是是硬件提供的支持；向上是操作系统或JVM对内存屏障作出的各种封装。内存屏障是一种标准，各厂商可能采用不同的实现。</p>
+<p>内存屏障的实现涉及大量硬件架构层面的知识，又需要操作系统或JVM的配合才能发挥威力，单纯从任何一个层面都无法理解。本文只是简单了解，并不做深度讨论</p>
+<h2 id="可见性与重排序"><a href="#可见性与重排序" class="headerlink" title="可见性与重排序"></a>可见性与重排序</h2><p>内存屏障的存在就是为了解决可见性与重排序的问题。到底什么是可见性？什么是重排序？为什么会有这些问题？</p>
+<h3 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h3><h4 id="定义-1"><a href="#定义-1" class="headerlink" title="定义"></a>定义</h4><p>可见性的定义常见于各种并发场景中，以多线程为例：当一个线程修改了线程共享变量的值，其它线程能够立即得知这个修改。</p>
+<p>从性能角度考虑，没有必要在修改后就立即同步修改的值——如果多次修改后才使用，那么只需要最后一次同步即可，在这之前的同步都是性能浪费。因此，实际的可见性定义要弱一些，只需要保证：<strong>当一个线程修改了线程共享变量的值，其它线程在使用前，能够得到最新的修改值</strong>。</p>
+<blockquote>
+<p>可见性可以认为是最弱的“<code>一致性</code>”（<code>弱一致</code>），只保证用户见到的数据是一致的，但不保证任意时刻，存储的数据都是一致的（<code>强一致</code>）。下文会讨论“缓存可见性”问题，部分文章也会称为“缓存一致性”问题。</p>
+</blockquote>
+<h4 id="问题来源"><a href="#问题来源" class="headerlink" title="问题来源"></a>问题来源</h4><p>一个最简单的可见性问题来自计算机内部的缓存架构：</p>
+<p><img src="http://qiniu.xemxx.cn/20200206224737.png?imageslim"></p>
+<p>缓存大大缩小了高速CPU与低速内存之间的差距。以三层缓存架构为例：</p>
+<ul>
+<li>L1 Cache最接近CPU, 容量最小（如32K、64K等）、速度最高，每个核上都有一个L1 Cache。</li>
+<li>L2 Cache容量更大（如256K）、速度更低, 一般情况下，每个核上都有一个独立的L2 Cache。</li>
+<li>L3 Cache最接近内存，容量最大（如12MB），速度最低，在同一个CPU插槽之间的核共享一个L3 Cache。</li>
+</ul>
+<blockquote>
+<p>准确地说，每个核上有两个L1 Cache, 一个存数据 L1d Cache, 一个存指令 L1i Cache。</p>
+</blockquote>
+<p>单核时代的一切都是那么完美。然而，多核时代出现了可见性问题。一个badcase如下：</p>
+<ol>
+<li>Core0与Core1命中了内存中的同一个地址，那么各自的L1 Cache会缓存同一份数据的副本。</li>
+<li>最开始，Core0与Core1都在友善的读取这份数据。</li>
+<li>突然，Core0要使坏了，它修改了这份数据，使得两份缓存中的数据不同了，更确切的说，Core1 L1 Cache中的数据<code>失效</code>了。</li>
+</ol>
+<p>单核时代只有Core0，Core0修改Core0读，没什么问题；但是，现在<em>Core0修改后，Core1并不知道数据已经失效，继续傻傻的使用</em>，轻则数据计算错误，重则导致死循环、程序崩溃等。</p>
+<p>实际的可见性问题还要扩展到两个方向：</p>
+<ul>
+<li>除三级缓存外，<em>各厂商实现的硬件架构中还存在多种多样的缓存，都存在类似的可见性问题</em>。例如，寄存器就相当于CPU与L1 Cache之间的缓存。</li>
+<li>各种高级语言（包括Java）的多线程内存模型中，<em>在线程栈内自己维护一份缓存是常见的优化措施，但显然在CPU级别的缓存可见性问题面前，一切都失效了</em>。</li>
+</ul>
+<blockquote>
+<p>以上只是最简单的可见性问题，不涉及重排序等。</p>
+<p>重排序也会导致可见性问题；同时，缓存上的可见性也会引起一些看似重排序导致的问题。</p>
+</blockquote>
+<h3 id="重排序"><a href="#重排序" class="headerlink" title="重排序"></a>重排序</h3><h4 id="定义-2"><a href="#定义-2" class="headerlink" title="定义"></a>定义</h4><p>重排序并没有严格的定义。整体上可以分为两种：</p>
+<ul>
+<li>真·重排序：<strong>编译器、底层硬件（CPU等）出于“优化”的目的</strong>，按照某种规则将指令重新排序（尽管有时候看起来像乱序）。</li>
+<li>伪·重排序：由于<strong>缓存同步顺序</strong>等问题，看起来指令被重排序了。</li>
+</ul>
+<p>重排序也是单核时代非常优秀的优化手段，有足够多的措施保证其在单核下的正确性。在多核时代，如果工作线程之间不共享数据或仅共享不可变数据，重排序也是性能优化的利器。然而，如果工作线程之间共享了可变数据，由于两种重排序的结果都不是固定的，会导致工作线程似乎表现出了随机行为。</p>
+<h4 id="问题来源-1"><a href="#问题来源-1" class="headerlink" title="问题来源"></a>问题来源</h4><p>重排序问题无时无刻不在发生，源自三种场景：</p>
+<ol>
+<li>编译器编译时的优化</li>
+<li>处理器执行时的乱序优化</li>
+<li>缓存同步顺序（导致可见性问题）</li>
+</ol>
+<p>场景1、2属于真·重排序；场景3属于伪·重排序。场景3也属于可见性问题，为保持连贯性，我们先讨论场景3。</p>
+<p>参考：</p>
+<p><a target="_blank" rel="noopener" href="https://monkeysayhi.github.io/2017/12/28/%E4%B8%80%E6%96%87%E8%A7%A3%E5%86%B3%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/">https://monkeysayhi.github.io/2017/12/28/%E4%B8%80%E6%96%87%E8%A7%A3%E5%86%B3%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C/</a></p>
+<p><a target="_blank" rel="noopener" href="http://ifeve.com/memory-barriers-or-fences/">http://ifeve.com/memory-barriers-or-fences/</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/dd864140130/article/details/56494925">https://blog.csdn.net/dd864140130/article/details/56494925</a></p>
+
+      </div>
+      
+      
+      
+    </div>
+  <ul class="breadcrumb">
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/">待发布</a></li>
+            <li><a href="/%E5%BE%85%E5%8F%91%E5%B8%83/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">内存管理</a></li>
+            <li>内存屏障</li>
+          
+  </ul>
+
+    
+    
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">66k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:01</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
