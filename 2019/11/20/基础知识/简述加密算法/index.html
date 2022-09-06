@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xemxx.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"style":null,"show_result":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="因为一次简单的面试题以及要做的一个系统，发现自己对这方面几乎没有整体的了解，所以想要全面的了解一下加密算法这个体系，但是也只是简单了解，毕竟也是一个比较大的领域">
+<meta property="og:type" content="article">
+<meta property="og:title" content="简述加密算法">
+<meta property="og:url" content="https://xemxx.github.io/2019/11/20/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/%E7%AE%80%E8%BF%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="因为一次简单的面试题以及要做的一个系统，发现自己对这方面几乎没有整体的了解，所以想要全面的了解一下加密算法这个体系，但是也只是简单了解，毕竟也是一个比较大的领域">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/lance-asper-W785zpEXZZo.jpg?imageslim">
+<meta property="article:published_time" content="2019-11-20T10:03:00.000Z">
+<meta property="article:modified_time" content="2022-09-06T15:39:36.534Z">
+<meta property="article:author" content="Xem">
+<meta property="article:tag" content="加密">
+<meta property="article:tag" content="基础知识">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/lance-asper-W785zpEXZZo.jpg?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/2019/11/20/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/%E7%AE%80%E8%BF%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://xemxx.github.io/2019/11/20/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/%E7%AE%80%E8%BF%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/","path":"2019/11/20/基础知识/简述加密算法/","title":"简述加密算法"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>简述加密算法 | Xem Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Xem Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E7%B1%BB%E5%9E%8B"><span class="nav-text">算法类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86"><span class="nav-text">对称加密</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86"><span class="nav-text">非对称加密</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E9%80%86%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95"><span class="nav-text">不可逆加密算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E7%AE%97%E6%B3%95"><span class="nav-text">常用算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#hash%E7%AE%97%E6%B3%95"><span class="nav-text">hash算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Hash%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E5%AE%83%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-text">1. Hash是什么，它的作用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E7%89%B9%E7%82%B9"><span class="nav-text">2. 特点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%B5%81%E8%A1%8C%E7%9A%84%E7%AE%97%E6%B3%95"><span class="nav-text">3. 流行的算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95"><span class="nav-text">对称加密算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#DES%E7%AE%97%E6%B3%95"><span class="nav-text">DES算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DES%E7%AE%97%E6%B3%95-1"><span class="nav-text">DES算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AES%E7%AE%97%E6%B3%95"><span class="nav-text">AES算法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86-1"><span class="nav-text">非对称加密</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RSA%E7%AE%97%E6%B3%95"><span class="nav-text">RSA算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ECC%E7%AE%97%E6%B3%95"><span class="nav-text">ECC算法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://xemxx.github.io/2019/11/20/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/%E7%AE%80%E8%BF%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xem">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Xem Blog">
+      <meta itemprop="description" content="分享技术学习路上的点滴">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="简述加密算法 | Xem Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          简述加密算法
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-11-20 18:03:00" itemprop="dateCreated datePublished" datetime="2019-11-20T18:03:00+08:00">2019-11-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-09-06 23:39:36" itemprop="dateModified" datetime="2022-09-06T23:39:36+08:00">2022-09-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" itemprop="url" rel="index"><span itemprop="name">基础知识</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>2.9k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>3 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>因为一次简单的面试题以及要做的一个系统，发现自己对这方面几乎没有整体的了解，所以想要全面的了解一下加密算法这个体系，但是也只是简单了解，毕竟也是一个比较大的领域</p>
+</blockquote>
+<span id="more"></span>
+
+<p><img src="http://qiniu.xemxx.cn/lance-asper-W785zpEXZZo.jpg?imageslim"></p>
+<blockquote>
+<p>前面比较啰嗦，喜欢精简的建议直接跳到总结：）</p>
+</blockquote>
+<h2 id="算法类型"><a href="#算法类型" class="headerlink" title="算法类型"></a>算法类型</h2><h3 id="对称加密"><a href="#对称加密" class="headerlink" title="对称加密"></a>对称加密</h3><ul>
+<li>数据加密和解密采用的都是同一个密钥，因而其安全性依赖于所持有密钥的安全性。</li>
+<li>主要优点是加密和解密速度快，加密强度高，且算法公开。</li>
+<li>不足之处是，交易双方都使用同样钥匙，安全性得不到保证。</li>
+<li>主要算法：DES，AES。</li>
+</ul>
+<h3 id="非对称加密"><a href="#非对称加密" class="headerlink" title="非对称加密"></a>非对称加密</h3><ul>
+<li>非对称加密算法使用两把完全不同但又是完全匹配的一对钥匙——公钥和私钥。</li>
+<li>加密明文时采用公钥加密，解密密文时使用私钥才能完成，或者相反也是可以的。</li>
+<li>基本原理是，如果发信方想发送只有收信方才能解读的加密信息，发信方必须首先知道收信方的公钥，然后利用收信方的公钥来加密原文；收信方收到加密密文后，使用自己的私钥才能解密密文。</li>
+<li>广泛应用的非对称加密算法有RSA算法和美国国家标准局提出的DSA。</li>
+<li>缺点是加密和解密花费时间长、速度慢。</li>
+<li>广泛应用的非对称加密算法有RSA算法和美国国家标准局提出的DSA。</li>
+</ul>
+<h3 id="不可逆加密算法"><a href="#不可逆加密算法" class="headerlink" title="不可逆加密算法"></a>不可逆加密算法</h3><p>事实上以上两种都是可逆的加密算法</p>
+<ul>
+<li>不可逆加密算法的特征是加密过程中不需要使用密钥，输入明文后由系统直接经过加密算法处理成密文，这种加密后的数据是无法被解9999999999的，只有重新输入明文，并再次经过同样不可逆的加密算法处理，得到相同的加密密文并被系统重新识别后，才能真正解密。</li>
+<li>在计算机网络中应用较多不可逆加密算法的有RSA公司发明的MD5算法和由美国国家标准局建议的不可逆加密标准SHS(Secure Hash Standard:安全杂乱信息标准)等</li>
+</ul>
+<h2 id="常用算法"><a href="#常用算法" class="headerlink" title="常用算法"></a>常用算法</h2><h3 id="hash算法"><a href="#hash算法" class="headerlink" title="hash算法"></a>hash算法</h3><h4 id="1-Hash是什么，它的作用"><a href="#1-Hash是什么，它的作用" class="headerlink" title="1. Hash是什么，它的作用"></a>1. Hash是什么，它的作用</h4><p>散列算法（Hash Algorithm），又称哈希算法，杂凑算法，是一种从任意文件中创造小的数字「指纹」的方法。</p>
+<p>此外，作为一种指纹，散列算法最重要的用途在于给证书、文档、密码等高安全系数的内容添加加密保护。这一方面的用途主要是得益于散列算法的不可逆性，这种不可逆性体现在，你不仅不可能根据一段通过散列算法得到的指纹来获得原有的文件，也不可能简单地创造一个文件并让它的指纹与一段目标指纹相一致。</p>
+<h4 id="2-特点"><a href="#2-特点" class="headerlink" title="2. 特点"></a>2. 特点</h4><p>一个优秀的 hash 算法，将能实现：</p>
+<ul>
+<li>正向快速：给定明文和 hash 算法，在有限时间和有限资源内能计算出 hash 值。</li>
+<li>逆向困难：给定（若干） hash 值，在有限时间内很难（基本不可能）逆推出明文。</li>
+<li>输入敏感：原始输入信息修改一点信息，产生的 hash 值看起来应该都有很大不同。</li>
+<li>冲突避免：很难找到两段内容不同的明文，使得它们的 hash 值一致（发生冲突）。即对于任意两个不同的数据块，其hash值相同的可能性极小；对于一个给定的数据块，找到和它hash值相同的数据块极为困难。</li>
+</ul>
+<p>但在不同的使用场景中，对不同的特点会有所侧重</p>
+<p>例如在我们代码中常用的hashmap，hash值（key）存在的目的是加速键值对的查找，key的作用是为了将元素适当地放在各个桶里，对于抗碰撞的要求没有那么高。换句话说，hash出来的key，只要保证value大致均匀的放在不同的桶里就可以了。但整个算法的set性能，直接与hash值产生的速度有关，所以这时候的hash值的产生速度就尤为重要</p>
+<p>此外在密码学中，对于抗碰撞和抗篡改能力要求极高，对速度的要求在其次。一个设计良好的hash算法，其抗碰撞能力是很高的。以MD5为例，其输出长度为128位，设计预期碰撞概率为2^128，这是一个极小极小的数字——而即便是在MD5被王小云教授破解之后，其碰撞概率上限也高达，也就是说，至少需要找次才能有1/2的概率来找到一个与目标文件相同的hash值。</p>
+<h4 id="3-流行的算法"><a href="#3-流行的算法" class="headerlink" title="3. 流行的算法"></a>3. 流行的算法</h4><p>目前流行的 Hash 算法包括 MD5、SHA-1 和 SHA-2。</p>
+<ul>
+<li><code>MD5</code> （RFC 1321）用的是 <strong>哈希函数</strong>，它的典型应用是对一段信息产生 <strong>信息摘要</strong>，以 <strong>防止被篡改</strong>。严格来说，<code>MD5</code> 不是一种 <strong>加密算法</strong> 而是 <strong>摘要算法</strong>。无论是多长的输入，<code>MD5</code> 都会输出长度为 <code>128bits</code> 的一个串 (通常用 <code>16</code> <strong>进制</strong> 表示为 <code>32</code> 个字符)，并且MD5 已被证明不具备<strong>强抗碰撞性</strong>。</li>
+<li><code>SHA</code>（Secure Hash Algorithm）是一个 Hash 函数族，由 <code>NIST</code>（National Institute of Standards and Technology）于 1993 年发布第一个算法。</li>
+<li><code>SHA-1</code> 是和 <code>MD5</code> 一样流行的 <strong>消息摘要算法</strong>，然而 <code>SHA-1</code> 比 <code>MD5</code> 的 <strong>安全性更强</strong>。对于长度小于 <code>2 ^ 64</code> 位的消息，<code>SHA-1</code> 会产生一个 <code>160</code> 位的 <strong>消息摘要</strong>。基于 <code>MD5</code>、<code>SHA-1</code> 的信息摘要特性以及 <strong>不可逆</strong> (一般而言)，可以被应用在检查 <strong>文件完整性</strong> 以及 <strong>数字签名</strong> 等场景，<code>SHA-1</code>设计时基于和 <code>MD4</code>相同原理，并且模仿了该算法。<code>SHA-1</code> 已被证明不具<strong>强抗碰撞性</strong>。</li>
+<li>为了提高安全性，<code>NIST</code> 还设计出了 SHA-224、SHA-256、SHA-384，和 SHA-512 算法（统称为<code> SHA-2</code>），跟 <code>SHA-1</code> 算法原理类似。SHA-3 相关算法也已被提出。</li>
+</ul>
+<p>可以看出，上面这几种流行的算法，它们最重要的一点区别就是<strong>强抗碰撞性</strong>。</p>
+<h3 id="对称加密算法"><a href="#对称加密算法" class="headerlink" title="对称加密算法"></a>对称加密算法</h3><h4 id="DES算法"><a href="#DES算法" class="headerlink" title="DES算法"></a>DES算法</h4><p><code>DES</code> 加密算法是一种 <strong>分组密码</strong>，以 <code>64</code> 位为 <strong>分组对数据</strong> 加密，它的 <strong>密钥长度</strong> 是 <code>56</code> 位，<strong>加密解密</strong> 用 <strong>同一算法</strong>。</p>
+<p><code>DES</code> 加密算法是对 <strong>密钥</strong> 进行保密，而 <strong>公开算法</strong>，包括加密和解密算法。这样，只有掌握了和发送方 <strong>相同密钥</strong> 的人才能解读由 <code>DES</code>加密算法加密的密文数据。因此，破译 <code>DES</code> 加密算法实际上就是 <strong>搜索密钥的编码</strong>。对于 <code>56</code> 位长度的 <strong>密钥</strong> 来说，如果用 <strong>穷举法</strong> 来进行搜索的话，其运算次数为 <code>2 ^ 56</code> 次。</p>
+<h4 id="DES算法-1"><a href="#DES算法-1" class="headerlink" title="DES算法"></a>DES算法</h4><p>是基于 <code>DES</code> 的 <strong>对称算法</strong>，对 <strong>一块数据</strong> 用 <strong>三个不同的密钥</strong> 进行 <strong>三次加密</strong>，<strong>强度更高</strong>。</p>
+<h4 id="AES算法"><a href="#AES算法" class="headerlink" title="AES算法"></a>AES算法</h4><p><code>AES</code> 加密算法是密码学中的 <strong>高级加密标准</strong>，该加密算法采用 <strong>对称分组密码体制</strong>，密钥长度的最少支持为 <code>128</code> 位、 <code>192</code> 位、<code>256</code> 位，分组长度 <code>128</code> 位，算法应易于各种硬件和软件实现。这种加密算法是美国联邦政府采用的 <strong>区块加密标准</strong>。</p>
+<p><code>AES</code> 本身就是为了取代 <code>DES</code> 的，<code>AES</code> 具有更好的 <strong>安全性</strong>、<strong>效率</strong> 和 <strong>灵活性</strong>。</p>
+<h3 id="非对称加密-1"><a href="#非对称加密-1" class="headerlink" title="非对称加密"></a>非对称加密</h3><h4 id="RSA算法"><a href="#RSA算法" class="headerlink" title="RSA算法"></a>RSA算法</h4><p><code>RSA</code> 加密算法是目前最有影响力的 <strong>公钥加密算法</strong>，并且被普遍认为是目前 <strong>最优秀的公钥方案</strong> 之一。<code>RSA</code> 是第一个能同时用于 <strong>加密</strong> 和 <strong>数字签名</strong> 的算法，它能够 <strong>抵抗</strong> 到目前为止已知的 <strong>所有密码攻击</strong>，已被 <code>ISO</code> 推荐为公钥数据加密标准。</p>
+<blockquote>
+<p><code>RSA</code> <strong>加密算法</strong> 基于一个十分简单的数论事实：将两个大 <strong>素数</strong> 相乘十分容易，但想要对其乘积进行 <strong>因式分解</strong> 却极其困难，因此可以将 <strong>乘积</strong> 公开作为 <strong>加密密钥</strong>。</p>
+</blockquote>
+<h4 id="ECC算法"><a href="#ECC算法" class="headerlink" title="ECC算法"></a>ECC算法</h4><p><code>ECC</code> 也是一种 <strong>非对称加密算法</strong>，主要优势是在某些情况下，它比其他的方法使用 <strong>更小的密钥</strong>，比如 <code>RSA</code> <strong>加密算法</strong>，提供 <strong>相当的或更高等级</strong> 的安全级别。不过一个缺点是 <strong>加密和解密操作</strong> 的实现比其他机制 <strong>时间长</strong> (相比 <code>RSA</code> 算法，该算法对 <code>CPU</code> 消耗严重)。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>加密类型有三种：<strong>对称/非对称加密</strong>、<strong>不可逆加密</strong>，其中<strong>散列(HASH)算法</strong>属于不可加密的一种理论实践</p>
+<p>常用加密算法按照用处分为：</p>
+<ul>
+<li>MD5、SHA-1/2（可靠性、完整性），主用于文件唯一验证、身份验证，比如密码加密保存，文件系统同步</li>
+<li>RSA（可加解密），主用于小数据量加解密或者数据签名，比如ssl，ssh登陆</li>
+</ul>
+<p>参考：</p>
+<p><a target="_blank" rel="noopener" href="https://juejin.im/post/5b48b0d7e51d4519962ea383">浅谈常见的七种加密算法及实现</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/bf1d7eee28d0">Hash算法总结</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%8A%A0%E5%AF%86/" rel="tag"><i class="fa fa-tag"></i> 加密</a>
+              <a href="/tags/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" rel="tag"><i class="fa fa-tag"></i> 基础知识</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/07/26/golang/sort%E5%8C%85%E7%9A%84%E4%BD%BF%E7%94%A8/" rel="prev" title="sort包使用">
+                  <i class="fa fa-chevron-left"></i> sort包使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/01/12/mysql/Mysql%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95%E7%AE%80%E6%9E%90/" rel="next" title="Mysql全文索引简析">
+                  Mysql全文索引简析 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">78k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:10</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

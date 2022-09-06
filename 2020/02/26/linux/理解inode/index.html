@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xemxx.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"style":null,"show_result":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="inode在ext2开始使用，一直沿用至ext4，占据了文件系统的重要地位，这里简单理解下inode">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理解inode">
+<meta property="og:url" content="https://xemxx.github.io/2020/02/26/linux/%E7%90%86%E8%A7%A3inode/index.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="inode在ext2开始使用，一直沿用至ext4，占据了文件系统的重要地位，这里简单理解下inode">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200216234401.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200217001540.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200217001837.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200217002227.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200217211144.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200217234251.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200218003147.png?imageslim">
+<meta property="article:published_time" content="2020-02-26T08:16:00.000Z">
+<meta property="article:modified_time" content="2022-09-06T15:39:36.534Z">
+<meta property="article:author" content="Xem">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="文件系统">
+<meta property="article:tag" content="inode">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/20200216234401.png?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/2020/02/26/linux/%E7%90%86%E8%A7%A3inode/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://xemxx.github.io/2020/02/26/linux/%E7%90%86%E8%A7%A3inode/","path":"2020/02/26/linux/理解inode/","title":"理解inode"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>理解inode | Xem Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Xem Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81inode%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-text">一、inode是什么？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81inode%E7%9A%84%E5%86%85%E5%AE%B9"><span class="nav-text">二、inode的内容</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81inode%E7%9A%84%E5%A4%A7%E5%B0%8F"><span class="nav-text">三、inode的大小</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81inode%E5%8F%B7%E7%A0%81"><span class="nav-text">四、inode号码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6"><span class="nav-text">五、目录文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E7%A1%AC%E9%93%BE%E6%8E%A5"><span class="nav-text">六、硬链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E8%BD%AF%E9%93%BE%E6%8E%A5"><span class="nav-text">七、软链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81inode%E7%9A%84%E7%89%B9%E6%AE%8A%E4%BD%9C%E7%94%A8"><span class="nav-text">八、inode的特殊作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-text">九、总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E3%80%81%E5%8F%82%E8%80%83"><span class="nav-text">十、参考</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://xemxx.github.io/2020/02/26/linux/%E7%90%86%E8%A7%A3inode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xem">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Xem Blog">
+      <meta itemprop="description" content="分享技术学习路上的点滴">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="理解inode | Xem Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          理解inode
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-02-26 16:16:00" itemprop="dateCreated datePublished" datetime="2020-02-26T16:16:00+08:00">2020-02-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-09-06 23:39:36" itemprop="dateModified" datetime="2022-09-06T23:39:36+08:00">2022-09-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>3.4k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>3 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>inode在ext2开始使用，一直沿用至ext4，占据了文件系统的重要地位，这里简单理解下inode</p>
+</blockquote>
+<span id="more"></span>
+
+<blockquote>
+<p>在一个弄云计算的公司面试遇到这样的问题，而且没有理解到位，这里多花点时间看一下</p>
+</blockquote>
+<h2 id="一、inode是什么？"><a href="#一、inode是什么？" class="headerlink" title="一、inode是什么？"></a>一、inode是什么？</h2><p>理解inode，要从文件储存说起。</p>
+<p>文件储存在硬盘上，硬盘的最小存储单位叫做”扇区”（Sector）。每个扇区储存512字节（相当于0.5KB）。</p>
+<p>操作系统读取硬盘的时候，不会一个个扇区地读取，这样效率太低，而是一次性连续读取多个扇区，即一次性读取一个”块”（block）。这种由多个扇区组成的”块”，是文件存取的最小单位。”块”的大小，最常见的是4KB，即连续八个 sector组成一个 block。</p>
+<p>文件数据都储存在”块”中，那么很显然，我们还必须找到一个地方储存文件的元信息，比如文件的创建者、文件的创建日期、文件的大小等等。这种储存文件元信息的区域就叫做inode，中文译名为”索引节点”。</p>
+<p>每一个文件都有对应的inode，里面包含了与该文件有关的一些信息。</p>
+<h2 id="二、inode的内容"><a href="#二、inode的内容" class="headerlink" title="二、inode的内容"></a>二、inode的内容</h2><p>inode包含文件的元信息，具体来说有以下内容：</p>
+<ul>
+<li>文件的字节数</li>
+<li>文件拥有者的User ID</li>
+<li>文件的Group ID</li>
+<li>文件的读、写、执行权限</li>
+<li>文件的时间戳，共有三个：ctime指inode上一次变动的时间，mtime指文件内容上一次变动的时间，atime指文件上一次打开的时间。</li>
+<li>链接数，即有多少文件名指向这个inode</li>
+<li>文件数据block的位置</li>
+</ul>
+<p>可以用stat命令，查看某个文件的inode信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">stat</span> -x example.txt <span class="comment">#macOs 只是格式问题</span></span><br><span class="line"><span class="built_in">stat</span> example.txt <span class="comment">#linux</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="http://qiniu.xemxx.cn/20200216234401.png?imageslim"></p>
+<p>总之，除了文件名以外的所有文件信息，都存在inode之中。至于为什么没有文件名，下文会有详细解释。</p>
+<h2 id="三、inode的大小"><a href="#三、inode的大小" class="headerlink" title="三、inode的大小"></a>三、inode的大小</h2><p>inode也会消耗硬盘空间，所以硬盘格式化的时候，操作系统自动将硬盘分成两个区域。一个是数据区，存放文件数据；另一个是inode区（inode table），存放inode所包含的信息。</p>
+<p>每个inode节点的大小，一般是128字节或256字节。inode节点的总数，在格式化时就给定，一般是每1KB或每2KB就设置一个inode。假定在一块1GB的硬盘中，每个inode节点的大小为128字节，每1KB就设置一个inode，那么inode table的大小就会达到128MB，占整块硬盘的12.8%。</p>
+<p>查看每个硬盘分区的inode总数和已经使用的数量，可以使用df命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">df</span> -i</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://qiniu.xemxx.cn/20200217001540.png?imageslim"></p>
+<p>此外还可以查看某个分区的inode节点大小：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dumpe2fs -h /dev/vda1 | grep <span class="string">&quot;Inode size&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="http://qiniu.xemxx.cn/20200217001837.png?imageslim"></p>
+<p>由于每个文件都必须有一个inode，因此有可能发生inode已经用光，但是硬盘还未存满的情况。这时，就无法在硬盘上创建新文件。</p>
+<h2 id="四、inode号码"><a href="#四、inode号码" class="headerlink" title="四、inode号码"></a>四、inode号码</h2><p>每个inode都有一个号码，操作系统用inode号码来识别不同的文件。</p>
+<p>这里值得重复一遍，Unix/Linux系统内部不使用文件名，而使用inode号码来识别文件。对于系统来说，文件名只是inode号码便于识别的别称或者绰号。</p>
+<p>表面上，用户通过文件名，打开文件。实际上，系统内部这个过程分成三步：首先，系统找到这个文件名对应的inode号码；其次，通过inode号码，获取inode信息；最后，根据inode信息，找到文件数据所在的block，读出数据。</p>
+<p>使用ls -i命令，可以看到文件名对应的inode号码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> -i example.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://qiniu.xemxx.cn/20200217002227.png?imageslim"></p>
+<h2 id="五、目录文件"><a href="#五、目录文件" class="headerlink" title="五、目录文件"></a>五、目录文件</h2><p>Unix/Linux系统中，目录（directory）也是一种文件。打开目录，实际上就是打开目录文件。</p>
+<p>目录文件的结构非常简单，就是一系列目录项（dirent）的列表。每个目录项，由两部分组成：</p>
+<ul>
+<li>所包含文件的文件名</li>
+<li>该文件名对应的inode号码</li>
+</ul>
+<p>相关命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> -i <span class="comment"># 只显示文件名和inode号码</span></span><br><span class="line"><span class="built_in">ls</span> -l <span class="comment"># 列表显示详细信息</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="http://qiniu.xemxx.cn/20200217211144.png?imageslim"></p>
+<p>理解了上面这些知识，就能理解目录的权限：</p>
+<ul>
+<li>目录文件的读权限（r）和写权限（w），都是针对目录文件本身。</li>
+<li>由于目录文件内只有文件名和inode号码，所以如果只有读权限，只能获取文件名，无法获取其他信息，因为其他信息都储存在inode节点中，</li>
+<li>而读取inode节点内的信息需要目录文件的执行权限（x）。</li>
+</ul>
+<h2 id="六、硬链接"><a href="#六、硬链接" class="headerlink" title="六、硬链接"></a>六、硬链接</h2><p>一般情况下，文件名和inode号码是<strong>一一对应</strong>关系，每个inode号码对应一个文件名。但是，Unix/Linux系统允许，多个文件名指向同一个inode号码。</p>
+<p>这意味着，可以用不同的文件名访问同样的内容；对文件内容进行修改，会影响到所有文件名；但是，删除一个文件名，不影响另一个文件名的访问。这种情况就被称为<strong>硬链接</strong>（hard link）。</p>
+<p>ln命令可以创建硬链接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ln</span> origin.txt target.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://qiniu.xemxx.cn/20200217234251.png?imageslim"></p>
+<p>运行上面这条命令以后，源文件与目标文件的inode号码相同，都指向同一个inode。inode信息中有一项叫做”链接数”，记录指向该inode的文件名总数，这时就会增加1。</p>
+<p>反过来，删除一个文件名，就会使得inode节点中的”链接数”减1。当这个值减到0，表明没有文件名指向这个inode，系统就会回收这个inode号码，以及其所对应block区域。</p>
+<p>这里顺便说一下目录文件的”链接数”。创建目录时，默认会生成两个目录项：<code>.</code>和<code>..</code>。前者的inode号码就是当前目录的inode号码，等同于当前目录的<strong>硬链接</strong>；后者的inode号码就是当前目录的父目录的inode号码，等同于父目录的<strong>硬链接</strong>。所以，任何一个目录的<strong>硬链接</strong>总数，总是等于2加上它的子目录总数（含隐藏目录）。</p>
+<p>所以创建一个文件默认有1个连接数，创建一个文件夹默认有两个连接数</p>
+<h2 id="七、软链接"><a href="#七、软链接" class="headerlink" title="七、软链接"></a>七、软链接</h2><p>除了硬链接以外，还有一种特殊情况。</p>
+<p>文件A和文件B的inode号码虽然不一样，但是文件A的内容是文件B的路径。读取文件A时，系统会自动将访问者导向文件B。因此，无论打开哪一个文件，最终读取的都是文件B。这时，文件A就称为文件B的<strong>软链接</strong>（soft link）或者<strong>符号链接</strong>（symbolic link）。</p>
+<p>这意味着，文件A依赖于文件B而存在，如果删除了文件B，打开文件A就会报错：”No such file or directory”。这是软链接与硬链接最大的不同：文件A指向文件B的文件名，而不是文件B的inode号码，文件B的inode”链接数”不会因此发生变化。</p>
+<p>ln -s命令可以创建软链接。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ln</span> -s origin.txt t1.txt</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://qiniu.xemxx.cn/20200218003147.png?imageslim"></p>
+<p>可以看到t1.txt的inode和origin.txt是不同的</p>
+<h2 id="八、inode的特殊作用"><a href="#八、inode的特殊作用" class="headerlink" title="八、inode的特殊作用"></a>八、inode的特殊作用</h2><p>由于inode号码与文件名分离，这种机制导致了一些Unix/Linux系统特有的现象。</p>
+<ol>
+<li>有时，文件名包含特殊字符，无法正常删除。这时，直接删除inode节点，就能起到删除文件的作用。</li>
+<li>移动文件或重命名文件，只是改变文件名，不影响inode号码。</li>
+<li>打开一个文件以后，系统就以inode号码来识别这个文件，不再考虑文件名。因此，通常来说，系统无法从inode号码得知文件名。</li>
+</ol>
+<p>第3点使得软件更新变得简单，可以在不关闭软件的情况下进行更新，不需要重启。因为系统通过inode号码，识别运行中的文件，不通过文件名。更新的时候，新版文件以同样的文件名，生成一个新的inode，不会影响到运行中的文件。等到下一次运行这个软件的时候，文件名就自动指向新版文件，旧版文件的inode则被回收。</p>
+<h2 id="九、总结"><a href="#九、总结" class="headerlink" title="九、总结"></a>九、总结</h2><p>一个文件包含了文件名、inode、文件数据三个部分</p>
+<p>在文件系统中存储有文件名和inode的索引表</p>
+<p>然后在具体的磁盘划分中是分为了inode存储区和文件数据存储区，如果inode用完了，哪怕文件数据存储区还存在空余也不能再创建文件</p>
+<p>inode其实就是保存了文件的各项属性，但是不包含文件名，因为多个文件名可以指向同一个inode，比如硬链接</p>
+<p>硬链接是指针，所有的硬链接都是指向同一个磁盘块。 删除一个指针不会真正删除文件，只有把所有的指针都删除才会真正删除文件。</p>
+<p>软连接是另外一种类型的文件，保存的是它指向文件的全路径， 访问时会替换成绝对路径</p>
+<h2 id="十、参考"><a href="#十、参考" class="headerlink" title="十、参考"></a>十、参考</h2><p><a target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2011/12/inode.html">https://www.ruanyifeng.com/blog/2011/12/inode.html</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.opsers.org/base/one-day-the-little-learning-linux-inode-detailed.html">http://www.opsers.org/base/one-day-the-little-learning-linux-inode-detailed.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/dde6a01c4094">https://www.jianshu.com/p/dde6a01c4094</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"><i class="fa fa-tag"></i> linux</a>
+              <a href="/tags/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" rel="tag"><i class="fa fa-tag"></i> 文件系统</a>
+              <a href="/tags/inode/" rel="tag"><i class="fa fa-tag"></i> inode</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/01/17/%E7%BD%91%E7%BB%9C/Socket%E7%AE%80%E6%9E%90/" rel="prev" title="Socket简析">
+                  <i class="fa fa-chevron-left"></i> Socket简析
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/02/27/linux/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1IPC/" rel="next" title="进程间通信IPC">
+                  进程间通信IPC <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">78k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:10</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

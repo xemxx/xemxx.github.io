@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xemxx.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"style":null,"show_result":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="全文索引浅入浅出？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql全文索引简析">
+<meta property="og:url" content="https://xemxx.github.io/2020/01/12/mysql/Mysql%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95%E7%AE%80%E6%9E%90/index.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="全文索引浅入浅出？">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200112180123.jpg?imageslim">
+<meta property="article:published_time" content="2020-01-12T10:09:00.000Z">
+<meta property="article:modified_time" content="2022-09-06T15:39:36.534Z">
+<meta property="article:author" content="Xem">
+<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="全文索引">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/20200112180123.jpg?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/2020/01/12/mysql/Mysql%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95%E7%AE%80%E6%9E%90/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://xemxx.github.io/2020/01/12/mysql/Mysql%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95%E7%AE%80%E6%9E%90/","path":"2020/01/12/mysql/Mysql全文索引简析/","title":"Mysql全文索引简析"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Mysql全文索引简析 | Xem Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Xem Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5"><span class="nav-text">1. 概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E7%89%88%E6%9C%AC%E6%94%AF%E6%8C%81"><span class="nav-text">2. 版本支持</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%93%8D%E4%BD%9C%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95"><span class="nav-text">3. 操作全文索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E5%88%9B%E5%BB%BA"><span class="nav-text">3.1 创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E4%BF%AE%E6%94%B9"><span class="nav-text">3.2 修改</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E5%88%A0%E9%99%A4"><span class="nav-text">3.3 删除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E4%BD%BF%E7%94%A8"><span class="nav-text">3.4 使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%B5%8B%E8%AF%95%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95"><span class="nav-text">4. 测试全文索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-%E6%B7%BB%E5%8A%A0%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE"><span class="nav-text">4.1 添加测试数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-%E9%85%8D%E7%BD%AE%E6%9C%80%E5%B0%8F%E6%90%9C%E7%B4%A2%E9%95%BF%E5%BA%A6"><span class="nav-text">4.2 配置最小搜索长度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E4%B8%A4%E7%A7%8D%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95"><span class="nav-text">5. 两种全文索引</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E7%9A%84%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95"><span class="nav-text">5.1 自然语言的全文索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-%E5%B8%83%E5%B0%94%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95"><span class="nav-text">5.2 布尔全文索引</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E6%80%BB%E7%BB%93"><span class="nav-text">6. 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PS-%E5%87%A0%E4%B8%AA%E6%B3%A8%E6%84%8F%E7%82%B9"><span class="nav-text">PS: 几个注意点</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://xemxx.github.io/2020/01/12/mysql/Mysql%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95%E7%AE%80%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xem">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Xem Blog">
+      <meta itemprop="description" content="分享技术学习路上的点滴">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Mysql全文索引简析 | Xem Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mysql全文索引简析
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-01-12 18:09:00" itemprop="dateCreated datePublished" datetime="2020-01-12T18:09:00+08:00">2020-01-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-09-06 23:39:36" itemprop="dateModified" datetime="2022-09-06T23:39:36+08:00">2022-09-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>4.3k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>4 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>全文索引浅入浅出？</p>
+</blockquote>
+<span id="more"></span>
+<p><img src="http://qiniu.xemxx.cn/20200112180123.jpg?imageslim"></p>
+<blockquote>
+<p>最近在复习数据库索引部分，看到了 fulltext，也即全文索引，虽然全文索引在平时的业务中用到的不多，但是感觉它有点儿意思，所以花了点时间研究一下，特此记录。</p>
+</blockquote>
+<h2 id="1-概念"><a href="#1-概念" class="headerlink" title="1. 概念"></a>1. 概念</h2><p>通过数值比较、范围过滤等就可以完成绝大多数我们需要的查询，但是，如果希望通过关键字的匹配来进行查询过滤，那么就需要基于相似度的查询，而不是原来的精确数值比较。全文索引就是为这种场景设计的。</p>
+<p>你可能会说，用 like + % 就可以实现模糊匹配了，为什么还要全文索引？like + % 在文本比较少时是合适的，但是对于大量的文本数据检索，是不可想象的。全文索引在大量的数据面前，能比 like + % 快 N 倍，速度不是一个数量级，但是全文索引可能存在精度问题。</p>
+<p>你可能没有注意过全文索引，不过至少应该对一种全文索引技术比较熟悉：各种的搜索引擎。虽然搜索引擎的索引对象是超大量的数据，并且通常其背后都不是关系型数据库，不过全文索引的基本原理是一样的。</p>
+<h2 id="2-版本支持"><a href="#2-版本支持" class="headerlink" title="2. 版本支持"></a>2. 版本支持</h2><p>开始之前，先说一下全文索引的版本、存储引擎、数据类型的支持情况</p>
+<ol>
+<li>MySQL 5.6 以前的版本，只有 MyISAM 存储引擎支持全文索引；</li>
+<li>MySQL 5.6 及以后的版本，MyISAM 和 InnoDB 存储引擎均支持全文索引;</li>
+<li>只有字段的数据类型为 char、varchar、text 及其系列才可以建全文索引。</li>
+</ol>
+<p>测试或使用全文索引时，要先看一下自己的 MySQL 版本、存储引擎和数据类型是否支持全文索引。</p>
+<h2 id="3-操作全文索引"><a href="#3-操作全文索引" class="headerlink" title="3. 操作全文索引"></a>3. 操作全文索引</h2><h3 id="3-1-创建"><a href="#3-1-创建" class="headerlink" title="3.1 创建"></a>3.1 创建</h3><p>1.创建表时创建全文索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> fulltext_test (</span><br><span class="line">    id <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT,</span><br><span class="line">    content text <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">    tag <span class="type">varchar</span>(<span class="number">255</span>),</span><br><span class="line">    <span class="keyword">PRIMARY</span> KEY (id),</span><br><span class="line">    FULLTEXT KEY content_tag_fulltext(content,tag)  <span class="operator">/</span><span class="operator">/</span> 创建联合全文索引列</span><br><span class="line">) ENGINE<span class="operator">=</span>MyISAM <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8;</span><br></pre></td></tr></table></figure>
+
+<p>2.在已存在的表上创建全文索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> fulltext index content_tag_fulltext</span><br><span class="line">    <span class="keyword">on</span> fulltext_test(content,tag);</span><br></pre></td></tr></table></figure>
+
+<p>3.通过 SQL 语句 ALTER TABLE 创建全文索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> fulltext_test</span><br><span class="line">    <span class="keyword">add</span> fulltext index content_tag_fulltext(content,tag);</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-修改"><a href="#3-2-修改" class="headerlink" title="3.2 修改"></a>3.2 修改</h3><p>修改个 O，直接删掉重建。</p>
+<h3 id="3-3-删除"><a href="#3-3-删除" class="headerlink" title="3.3 删除"></a>3.3 删除</h3><p>1.直接使用 DROP INDEX 删除全文索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">drop</span> index content_tag_fulltext</span><br><span class="line">    <span class="keyword">on</span> fulltext_test;</span><br></pre></td></tr></table></figure>
+
+<p>2.通过 SQL 语句 ALTER TABLE 删除全文索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> fulltext_test</span><br><span class="line">    <span class="keyword">drop</span> index content_tag_fulltext;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-4-使用"><a href="#3-4-使用" class="headerlink" title="3.4 使用"></a>3.4 使用</h2><p>和常用的模糊匹配使用 like + % 不同，全文索引有自己的语法格式，使用 match 和 against 关键字，比如</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> fulltext_test </span><br><span class="line">    <span class="keyword">where</span> <span class="keyword">match</span>(content,tag) against(<span class="string">&#x27;xxx xxx&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：</strong> match() 函数中指定的列必须和全文索引中指定的列完全相同，否则就会报错，无法使用全文索引，这是因为全文索引不会记录关键字来自哪一列。如果想要对某一列使用全文索引，请单独为该列创建全文索引。</p>
+<h2 id="4-测试全文索引"><a href="#4-测试全文索引" class="headerlink" title="4. 测试全文索引"></a>4. 测试全文索引</h2><h3 id="4-1-添加测试数据"><a href="#4-1-添加测试数据" class="headerlink" title="4.1 添加测试数据"></a>4.1 添加测试数据</h3><p>有了上面的知识，就可以测试一下全文索引了。</p>
+<p>首先创建测试表，插入测试数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">create table test (</span><br><span class="line">    id int(11) unsigned not null auto_increment,</span><br><span class="line">    content text not null,</span><br><span class="line">    primary key(id),</span><br><span class="line">    fulltext key content_index(content)</span><br><span class="line">) engine=MyISAM default charset=utf8;</span><br><span class="line">     </span><br><span class="line">insert into test (content) values (&#x27;a&#x27;),(&#x27;b&#x27;),(&#x27;c&#x27;);</span><br><span class="line">insert into test (content) values (&#x27;aa&#x27;),(&#x27;bb&#x27;),(&#x27;cc&#x27;);</span><br><span class="line">insert into test (content) values (&#x27;aaa&#x27;),(&#x27;bbb&#x27;),(&#x27;ccc&#x27;);</span><br><span class="line">insert into test (content) values (&#x27;aaaa&#x27;),(&#x27;bbbb&#x27;),(&#x27;cccc&#x27;);</span><br></pre></td></tr></table></figure>
+
+<p>按照全文索引的使用语法执行下面查询</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> test <span class="keyword">where</span> <span class="keyword">match</span>(content) against(<span class="string">&#x27;a&#x27;</span>);</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> test <span class="keyword">where</span> <span class="keyword">match</span>(content) against(<span class="string">&#x27;aa&#x27;</span>);</span><br><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> test <span class="keyword">where</span> <span class="keyword">match</span>(content) against(<span class="string">&#x27;aaa&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>根据我们的惯性思维，应该会显示3 条记录（或者你可以认为是4+3+2条，后面再解释）才对，然而结果是 1 条记录也没有，只有在执行下面的查询时</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span> <span class="keyword">from</span> test <span class="keyword">where</span> <span class="keyword">match</span>(content) against(<span class="string">&#x27;aaaa&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>才会搜到 <em>aaaa</em> 这 1 条记录。</p>
+<p>为什么？这个问题有很多原因，其中最常见的就是 <strong>最小搜索长度</strong> 导致的。另外插一句，使用全文索引时，测试表里至少要有 4 条以上的记录，否则，会出现意想不到的结果。</p>
+<p>MySQL 中的全文索引，有两个变量，<strong>最小搜索长度</strong>和<strong>最大搜索长度</strong>，对于长度小于最小搜索长度和大于最大搜索长度的词语，都不会被索引。通俗点就是说，想对一个词语使用全文索引搜索，那么这个词语的长度必须在以上两个变量的区间内。</p>
+<p>这两个的默认值可以使用以下命令查看</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show variables like &#x27;%ft%&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到这两个变量在 MyISAM 和 InnoDB 两种存储引擎下的变量名和默认值</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// MyISAM</span><br><span class="line"><span class="attr">ft_min_word_len</span> = <span class="number">4</span><span class="comment">;</span></span><br><span class="line"><span class="attr">ft_max_word_len</span> = <span class="number">84</span><span class="comment">;</span></span><br><span class="line">      </span><br><span class="line">// InnoDB</span><br><span class="line"><span class="attr">innodb_ft_min_token_size</span> = <span class="number">3</span><span class="comment">;</span></span><br><span class="line"><span class="attr">innodb_ft_max_token_size</span> = <span class="number">84</span><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到最小搜索长度 MyISAM 引擎下默认是 4，InnoDB 引擎下是 3，也即，MySQL 的全文索引只会对长度大于等于 4 或者 3 的词语建立索引，而刚刚搜索的只有 <em>aaaa</em> 的长度大于等于 4。</p>
+<h3 id="4-2-配置最小搜索长度"><a href="#4-2-配置最小搜索长度" class="headerlink" title="4.2 配置最小搜索长度"></a>4.2 配置最小搜索长度</h3><p>全文索引的相关参数都无法进行动态修改，必须通过修改 MySQL 的配置文件来完成。修改最小搜索长度的值为 1，首先打开 MySQL 的配置文件 /etc/my.cnf，在 [mysqld] 的下面追加以下内容</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[mysqld]</span></span><br><span class="line"><span class="attr">innodb_ft_min_token_size</span> = <span class="number">1</span></span><br><span class="line"><span class="attr">ft_min_word_len</span> = <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>然后重启 MySQL 服务器，并修复全文索引。注意，修改完参数以后，一定要修复下索引，不然参数不会生效。</p>
+<p>两种修复方式，可以使用下面的命令修复</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">repair table test quick;</span><br></pre></td></tr></table></figure>
+
+<p>或者直接删掉重新建立索引，再次执行上面的查询，<em>a、aa、aaa</em> 就都可以查出来了。</p>
+<p>但是，这里还有一个问题，搜索关键字 <em>a</em> 时，为什么 <em>aa、aaa、aaaa</em> 没有出现结果中，讲这个问题之前，先说说两种全文索引。</p>
+<h2 id="5-两种全文索引"><a href="#5-两种全文索引" class="headerlink" title="5. 两种全文索引"></a>5. 两种全文索引</h2><h3 id="5-1-自然语言的全文索引"><a href="#5-1-自然语言的全文索引" class="headerlink" title="5.1 自然语言的全文索引"></a>5.1 自然语言的全文索引</h3><p>默认情况下，或者使用 in natural language mode 修饰符时，match() 函数对文本集合执行自然语言搜索，上面的例子都是自然语言的全文索引。</p>
+<p>自然语言搜索引擎将计算每一个文档对象和查询的相关度。这里，相关度是基于匹配的关键词的个数，以及关键词在文档中出现的次数。在整个索引中出现次数越少的词语，匹配时的相关度就越高。相反，非常常见的单词将不会被搜索，如果一个词语的在超过 50% 的记录中都出现了，那么自然语言的搜索将不会搜索这类词语。上面提到的，测试表中必须有 4 条以上的记录，就是这个原因。</p>
+<p>这个机制也比较好理解，比如说，一个数据表存储的是一篇篇的文章，文章中的常见词、语气词等等，出现的肯定比较多，搜索这些词语就没什么意义了，需要搜索的是那些文章中有特殊意义的词，这样才能把文章区分开。</p>
+<h3 id="5-2-布尔全文索引"><a href="#5-2-布尔全文索引" class="headerlink" title="5.2 布尔全文索引"></a>5.2 布尔全文索引</h3><p>在布尔搜索中，我们可以在查询中自定义某个被搜索的词语的相关性，当编写一个布尔搜索查询时，可以通过一些前缀修饰符来定制搜索。</p>
+<p>MySQL 内置的修饰符，上面查询最小搜索长度时，搜索结果 ft_boolean_syntax 变量的值就是内置的修饰符，下面简单解释几个，更多修饰符的作用可以查手册</p>
+<ul>
+<li><strong>+</strong> 必须包含该词</li>
+<li><strong>-</strong> 必须不包含该词</li>
+<li><strong>&gt;</strong> 提高该词的相关性，查询的结果靠前</li>
+<li><strong>&lt;</strong> 降低该词的相关性，查询的结果靠后</li>
+<li><strong>(*)星号</strong> 通配符，只能接在词后面</li>
+</ul>
+<p>对于上面提到的问题，可以使用布尔全文索引查询来解决，使用下面的命令，<em>a、aa、aaa、aaaa</em> 就都被查询出来了。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">select * test where match(content) against(&#x27;a*&#x27; in boolean mode);</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-总结"><a href="#6-总结" class="headerlink" title="6. 总结"></a>6. 总结</h2><p>MySQL 的全文索引最开始仅支持英语，因为英语的词与词之间有空格，使用空格作为分词的分隔符是很方便的。亚洲文字，比如汉语、日语、汉语等，是没有空格的，这就造成了一定的限制。不过 MySQL 5.7.6 开始，引入了一个 ngram 全文分析器来解决这个问题，并且对 MyISAM 和 InnoDB 引擎都有效。</p>
+<p>事实上，MyISAM 存储引擎对全文索引的支持有很多的限制，例如表级别锁对性能的影响、数据文件的崩溃、崩溃后的恢复等，这使得 MyISAM 的全文索引对于很多的应用场景并不适合。所以，多数情况下的建议是使用别的解决方案，例如 Sphinx、Lucene 等等第三方的插件，亦或是使用 InnoDB 存储引擎的全文索引。</p>
+<h2 id="PS-几个注意点"><a href="#PS-几个注意点" class="headerlink" title="PS: 几个注意点"></a>PS: 几个注意点</h2><ol>
+<li>使用全文索引前，搞清楚版本支持情况；</li>
+<li>全文索引比 like + % 快 N 倍，但是可能存在精度问题；</li>
+<li>如果需要全文索引的是大量数据，建议先添加数据，再创建索引；</li>
+<li>对于中文，可以使用 MySQL 5.7.6 之后的版本，或者第三方插件。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"><i class="fa fa-tag"></i> mysql</a>
+              <a href="/tags/%E5%85%A8%E6%96%87%E7%B4%A2%E5%BC%95/" rel="tag"><i class="fa fa-tag"></i> 全文索引</a>
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"><i class="fa fa-tag"></i> 数据库</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/11/20/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/%E7%AE%80%E8%BF%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" rel="prev" title="简述加密算法">
+                  <i class="fa fa-chevron-left"></i> 简述加密算法
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/01/14/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8%E7%AE%80%E6%9E%90/" rel="next" title="布隆过滤器简析">
+                  布隆过滤器简析 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">78k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:10</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

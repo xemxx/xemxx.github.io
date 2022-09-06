@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xemxx.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"style":null,"show_result":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="今天阅读Go标准库的sort包，这个包是实现排序功能的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sort包使用">
+<meta property="og:url" content="https://xemxx.github.io/2019/07/26/golang/sort%E5%8C%85%E7%9A%84%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="今天阅读Go标准库的sort包，这个包是实现排序功能的">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20190727193959.jpg?imageslim">
+<meta property="article:published_time" content="2019-07-26T11:39:59.000Z">
+<meta property="article:modified_time" content="2022-09-06T15:39:36.534Z">
+<meta property="article:author" content="Xem">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/20190727193959.jpg?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/2019/07/26/golang/sort%E5%8C%85%E7%9A%84%E4%BD%BF%E7%94%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://xemxx.github.io/2019/07/26/golang/sort%E5%8C%85%E7%9A%84%E4%BD%BF%E7%94%A8/","path":"2019/07/26/golang/sort包的使用/","title":"sort包使用"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>sort包使用 | Xem Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Xem Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="nav-text">使用示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90"><span class="nav-text">源码解析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%B3%95%E6%80%BB%E7%BB%93"><span class="nav-text">用法总结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1%E3%80%81%E7%AE%80%E5%8D%95%E7%B1%BB%E5%9E%8B"><span class="nav-text">1、简单类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2%E3%80%81%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B"><span class="nav-text">2、自定义类型</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://xemxx.github.io/2019/07/26/golang/sort%E5%8C%85%E7%9A%84%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xem">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Xem Blog">
+      <meta itemprop="description" content="分享技术学习路上的点滴">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="sort包使用 | Xem Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          sort包使用
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-07-26 19:39:59" itemprop="dateCreated datePublished" datetime="2019-07-26T19:39:59+08:00">2019-07-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-09-06 23:39:36" itemprop="dateModified" datetime="2022-09-06T23:39:36+08:00">2022-09-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/golang/" itemprop="url" rel="index"><span itemprop="name">golang</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>4.3k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>4 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>今天阅读Go标准库的sort包，这个包是实现排序功能的</p>
+</blockquote>
+<span id="more"></span>
+
+<p><img src="http://qiniu.xemxx.cn/20190727193959.jpg?imageslim"></p>
+<h2 id="使用示例"><a href="#使用示例" class="headerlink" title="使用示例"></a><strong>使用示例</strong></h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := []<span class="type">string</span>&#123;<span class="string">&quot;bag&quot;</span>, <span class="string">&quot;cat&quot;</span>, <span class="string">&quot;apple&quot;</span>, <span class="string">&quot;dog&quot;</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;before sort:&quot;</span>, a)</span><br><span class="line">    sort.Strings(a)  <span class="comment">//对字符串切片排序</span></span><br><span class="line">    <span class="comment">// 也可以这样调用 sort.StringSlice(a).Sort() </span></span><br><span class="line">    fmt.Println(<span class="string">&quot;after sort:&quot;</span>, a)</span><br><span class="line"></span><br><span class="line">    b := []<span class="type">int</span>&#123;<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;before sort:&quot;</span>, b)</span><br><span class="line">    sort.Ints(b)  <span class="comment">//对整数切片排序</span></span><br><span class="line">    <span class="comment">// 也可以这样调用 sort.IntSlice(a).Sort() </span></span><br><span class="line">    fmt.Println(<span class="string">&quot;after sort:&quot;</span>, b)</span><br><span class="line"></span><br><span class="line">    c := []<span class="type">float64</span>&#123;<span class="number">2.0</span>, <span class="number">1.5</span>, <span class="number">3.3</span>, <span class="number">0.8</span>&#125;</span><br><span class="line">    fmt.Println(<span class="string">&quot;before sort:&quot;</span>, c)</span><br><span class="line">    sort.Float64s(c)  <span class="comment">//对浮点数切片排序</span></span><br><span class="line">    <span class="comment">// 也可以这样调用 sort.Float64Slice(a).Sort() </span></span><br><span class="line">    fmt.Println(<span class="string">&quot;after sort:&quot;</span>, c)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 输出</span></span><br><span class="line">before sort: [bag cat apple dog]</span><br><span class="line">after sort: [apple bag cat dog]</span><br><span class="line">before sort: [<span class="number">1</span> <span class="number">3</span> <span class="number">5</span> <span class="number">2</span> <span class="number">4</span> <span class="number">6</span>]</span><br><span class="line">after sort: [<span class="number">1</span> <span class="number">2</span> <span class="number">3</span> <span class="number">4</span> <span class="number">5</span> <span class="number">6</span>]</span><br><span class="line">before sort: [<span class="number">2</span> <span class="number">1.5</span> <span class="number">3.3</span> <span class="number">0.8</span>]</span><br><span class="line">after sort: [<span class="number">0.8</span> <span class="number">1.5</span> <span class="number">2</span> <span class="number">3.3</span>]</span><br></pre></td></tr></table></figure>
+
+<h2 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a><strong>源码解析</strong></h2><p>1、<code>sort</code> 包定义了<code>Interface</code>接口，包含一下三个方法，<strong>只要实现了这个接口，就可以调用sort包中的排序方法。</strong></p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Interface <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// Len is the number of elements in the collection.</span></span><br><span class="line">    Len() <span class="type">int</span></span><br><span class="line">    <span class="comment">// Less reports whether the element with</span></span><br><span class="line">    <span class="comment">// index i should sort before the element with index j.</span></span><br><span class="line">    Less(i, j <span class="type">int</span>) <span class="type">bool</span></span><br><span class="line">    <span class="comment">// Swap swaps the elements with indexes i and j.</span></span><br><span class="line">    Swap(i, j <span class="type">int</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2、示例中的<code>IntSlice</code>，<code>StringSlice</code>，<code>Float64Slice</code> 等类型都实现了<code>Interface</code>接口，以 <code>IntSlice</code>为例，如下：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// IntSlice attaches the methods of Interface to []int, sorting in increasing order.</span></span><br><span class="line"><span class="keyword">type</span> IntSlice []<span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p IntSlice)</span></span> Len() <span class="type">int</span>           &#123; <span class="keyword">return</span> <span class="built_in">len</span>(p) &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p IntSlice)</span></span> Less(i, j <span class="type">int</span>) <span class="type">bool</span> &#123; <span class="keyword">return</span> p[i] &lt; p[j] &#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p IntSlice)</span></span> Swap(i, j <span class="type">int</span>)      &#123; p[i], p[j] = p[j], p[i] &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Sort is a convenience method.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p IntSlice)</span></span> Sort() &#123; Sort(p) &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Ints sorts a slice of ints in increasing order.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Ints</span><span class="params">(a []<span class="type">int</span>)</span></span> &#123; Sort(IntSlice(a)) &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>sort.Ints(b)</code>的调用其实就是先转换参数<code>b</code>的类型为<code>IntSlice</code>然后调用自身的<code>Sort()</code>方法，然后<code>IntSlice</code>类型有<code>Sort()</code>方法，所以<code>sort.IntSlice(b).Sort()</code>调用是可以的</li>
+</ul>
+<p>3、<code>sort.Sort()</code>方法属于<code>sort</code>包暴露出来的核心调用方法，如下：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Sort sorts data.</span></span><br><span class="line"><span class="comment">// It makes one call to data.Len to determine n, and O(n*log(n)) calls to</span></span><br><span class="line"><span class="comment">// data.Less and data.Swap. The sort is not guaranteed to be stable.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Sort</span><span class="params">(data Interface)</span></span> &#123;</span><br><span class="line">	n := data.Len()</span><br><span class="line">	quickSort(data, <span class="number">0</span>, n, maxDepth(n))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>sort.Sort()</code>对<code>data</code>进行排序。它调用一次<code>data.Len()</code>来决定排序的长度n，调用 <code>data.Less</code> 和<code>data.Swap()</code>的开销为O(n*log(n))。</p>
+</li>
+<li><p>此排序为不稳定排序。他根据不同形式决定使用不同的排序方式（插入排序，堆排序，快排）</p>
+</li>
+<li><p>因此，一个类型只要实现了<code>Interface</code>接口，就可以调用 <code>sort.Sort()</code>方法对其进行排序。</p>
+</li>
+<li><p>此处<code>Interface</code>是<code>sort</code>包自行定义的接口，区别<code>interface</code>，前文提到过，并且<code>sort.Sort()</code>默认排序后是升序的</p>
+</li>
+</ul>
+<p>4、由于<code>sort.Sort()</code>方法默认排序为升序，所以<code>sort</code>包也提供了降序的方法<code>sort.Reverse()</code>，如下：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> reverse <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// This embedded Interface permits Reverse to use the methods of</span></span><br><span class="line">	<span class="comment">// another Interface implementation.</span></span><br><span class="line">	Interface</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Less returns the opposite of the embedded implementation&#x27;s Less method.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r reverse)</span></span> Less(i, j <span class="type">int</span>) <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> r.Interface.Less(j, i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Reverse returns the reverse order for data.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Reverse</span><span class="params">(data Interface)</span></span> Interface &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;reverse&#123;data&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>这里通过一个<code>reverse</code>的struct，实现了一个对<code>Interface</code>新封装，通过修改新增<code>reverse.Less()</code>方法，将<code>i,j</code>两个参数<strong>互换顺序</strong>从而实现降序排序，实在是骚操作了-，-</li>
+<li>由于是已经改变了传入对象的类型，所以不能重复调用<code>sort.Reverse()</code>fangfa</li>
+</ul>
+<p>5、源码的简单部分就这些，后续再考虑深入阅读，例如自动选择排序方法的实现，以及对实现<code>Inrerface</code>接口的对象的一些附加操作。</p>
+<h2 id="用法总结"><a href="#用法总结" class="headerlink" title="用法总结"></a><strong>用法总结</strong></h2><h4 id="1、简单类型"><a href="#1、简单类型" class="headerlink" title="1、简单类型"></a><strong>1、简单类型</strong></h4><p><code>[]int,[]string,[]float64</code>，直接类型转换为<code>sort</code>包的内置类型即可，以<code>[]int</code>为例如下：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 快速使用</span></span><br><span class="line">sort.Ints([]<span class="type">int</span>&#123;&#125;)</span><br><span class="line"><span class="comment">// 转换使用</span></span><br><span class="line">sort.IntSlince([]<span class="type">int</span>&#123;&#125;).Sort()</span><br></pre></td></tr></table></figure>
+
+<h4 id="2、自定义类型"><a href="#2、自定义类型" class="headerlink" title="2、自定义类型"></a><strong>2、自定义类型</strong></h4><p>首先实现Interface接口，然后如简单类型调用即可，示例：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reconstructQueue</span><span class="params">(people [][]<span class="type">int</span>)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	re := <span class="built_in">make</span>([][]<span class="type">int</span>, <span class="number">0</span>)</span><br><span class="line">	sort.Sort(heightAndRank(people))</span><br><span class="line">	<span class="keyword">for</span> _, v := <span class="keyword">range</span> people &#123;</span><br><span class="line">		insert(&amp;re, v, v[<span class="number">1</span>])</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> re</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">insert</span><span class="params">(re *[][]<span class="type">int</span>, h []<span class="type">int</span>, k <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	*re = <span class="built_in">append</span>(*re, []<span class="type">int</span>&#123;&#125;)</span><br><span class="line">	<span class="built_in">copy</span>((*re)[k+<span class="number">1</span>:], (*re)[k:])</span><br><span class="line">	(*re)[k] = h</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//自定义类型</span></span><br><span class="line"><span class="keyword">type</span> heightAndRank [][]<span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//实现Interface接口</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r heightAndRank)</span></span> Len() <span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">len</span>(r)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r heightAndRank)</span></span> Less(i, j <span class="type">int</span>) <span class="type">bool</span> &#123;</span><br><span class="line">	<span class="comment">// 对h进行判断 按照降序排序</span></span><br><span class="line">	<span class="keyword">if</span> r[i][<span class="number">0</span>] &gt; r[j][<span class="number">0</span>] &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> r[i][<span class="number">0</span>] &lt; r[j][<span class="number">0</span>] &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 对j进行判断 按照升序进行排序</span></span><br><span class="line">	<span class="keyword">return</span> r[i][<span class="number">1</span>] &lt; r[j][<span class="number">1</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r heightAndRank)</span></span> Swap(i, j <span class="type">int</span>) &#123;</span><br><span class="line">	r[i], r[j] = r[j], r[i]</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>以上代码是leetcode 406题的解法，首先是思路是将二维数组<code>[][]int</code>按照h降序，k升序来排序，（PS：分别h为第一个参数，k为第二个参数，对应<code>r[i][0]</code>以及<code>r[i][1]</code>），然后遍历排序后的数组，通过拆入来实现需要得到的顺序，此处用到<code>sort</code>包</li>
+<li>此处用到<code>sort</code>包实现排序部分，排序的重点其实在于<code>Less()</code>方法的实现，源码注释说明该方法是判断索引为i的元素是否小于索引为j的元素，我们将其修改反向判断h即可实现h的降序，如果h相同则判断k，实现k的升序</li>
+<li>单独测试排序效果：</li>
+</ul>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//修改reconstructQueue方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reconstructQueue</span><span class="params">(people [][]<span class="type">int</span>)</span></span> [][]<span class="type">int</span> &#123;</span><br><span class="line">	sort.Sort(heightAndRank(people))</span><br><span class="line">	<span class="keyword">return</span> people</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    re := reconstructQueue([][]<span class="type">int</span>&#123;&#123;<span class="number">7</span>, <span class="number">0</span>&#125;, &#123;<span class="number">4</span>, <span class="number">4</span>&#125;, &#123;<span class="number">7</span>, <span class="number">1</span>&#125;, &#123;<span class="number">5</span>, <span class="number">0</span>&#125;, &#123;<span class="number">6</span>, <span class="number">1</span>&#125;, &#123;<span class="number">5</span>, <span class="number">2</span>&#125;&#125;)</span><br><span class="line">	fmt.Print(re)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//输出</span></span><br><span class="line">[[<span class="number">7</span> <span class="number">0</span>] [<span class="number">7</span> <span class="number">1</span>] [<span class="number">6</span> <span class="number">1</span>] [<span class="number">5</span> <span class="number">0</span>] [<span class="number">5</span> <span class="number">2</span>] [<span class="number">4</span> <span class="number">4</span>]]</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"><i class="fa fa-tag"></i> golang</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/07/11/%E9%9D%A2%E7%BB%8F/%E4%BB%8A%E6%97%A5%E5%A4%B4%E6%9D%A1%E6%A0%A1%E6%8B%9B%E6%8F%90%E5%89%8D%E6%89%B9/" rel="prev" title="字节跳动校招提前批">
+                  <i class="fa fa-chevron-left"></i> 字节跳动校招提前批
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2019/11/20/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/%E7%AE%80%E8%BF%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95/" rel="next" title="简述加密算法">
+                  简述加密算法 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">78k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:10</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

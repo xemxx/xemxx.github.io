@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xemxx.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"style":null,"show_result":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="i&#x2F;o模型事实上是一个通用的概念，本文主要通过介绍网络i&#x2F;o模型以及具体解析i&#x2F;o多路复用模型的原理来方便大家理解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络I&#x2F;O模型以及多路复用">
+<meta property="og:url" content="https://xemxx.github.io/2020/03/01/%E7%BD%91%E7%BB%9C/%E7%BD%91%E7%BB%9CIO%E6%A8%A1%E5%9E%8B%E4%BB%A5%E5%8F%8A%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/index.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="i&#x2F;o模型事实上是一个通用的概念，本文主要通过介绍网络i&#x2F;o模型以及具体解析i&#x2F;o多路复用模型的原理来方便大家理解。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200227152000.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200227215839.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200227215920.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200227233348.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200227233041.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200301130031.png?imageslim">
+<meta property="article:published_time" content="2020-03-01T06:27:04.000Z">
+<meta property="article:modified_time" content="2022-09-06T15:39:36.538Z">
+<meta property="article:author" content="Xem">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="网络编程">
+<meta property="article:tag" content="select">
+<meta property="article:tag" content="poll">
+<meta property="article:tag" content="epoll">
+<meta property="article:tag" content="i&#x2F;o模型">
+<meta property="article:tag" content="i&#x2F;o多路复用">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/20200227152000.png?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/2020/03/01/%E7%BD%91%E7%BB%9C/%E7%BD%91%E7%BB%9CIO%E6%A8%A1%E5%9E%8B%E4%BB%A5%E5%8F%8A%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://xemxx.github.io/2020/03/01/%E7%BD%91%E7%BB%9C/%E7%BD%91%E7%BB%9CIO%E6%A8%A1%E5%9E%8B%E4%BB%A5%E5%8F%8A%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/","path":"2020/03/01/网络/网络IO模型以及多路复用/","title":"网络I/O模型以及多路复用"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>网络I/O模型以及多路复用 | Xem Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Xem Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%AE%80%E4%BB%8B"><span class="nav-text">1. 简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E4%BA%94%E7%A7%8DI-O%E6%A8%A1%E5%9E%8B"><span class="nav-text">2. 五种I&#x2F;O模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E9%98%BB%E5%A1%9EI-O"><span class="nav-text">2.1. 阻塞I&#x2F;O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-%E9%9D%9E%E9%98%BB%E5%A1%9EI-O"><span class="nav-text">2.2. 非阻塞I&#x2F;O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-I-O-%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8"><span class="nav-text">2.3.  I&#x2F;O 多路复用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8I-O"><span class="nav-text">2.4. 信号驱动I&#x2F;O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-%E5%BC%82%E6%AD%A5I-O"><span class="nav-text">2.5. 异步I&#x2F;O</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-%E5%8F%82%E8%80%83"><span class="nav-text">2.6. 参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-I-O%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F"><span class="nav-text">3. I&#x2F;O多路复用的几种方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-Linux%E7%9A%84socket-%E4%BA%8B%E4%BB%B6wakeup-callback%E6%9C%BA%E5%88%B6"><span class="nav-text">3.1. Linux的socket 事件wakeup callback机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-select"><span class="nav-text">3.2. select</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">基本原理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-poll"><span class="nav-text">3.3. poll</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-epoll"><span class="nav-text">3.4. epoll</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-text">1. 基本原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%85%B3%E4%BA%8E%E8%BE%B9%E7%BC%98%E8%A7%A6%E5%8F%91%E5%92%8C%E6%B0%B4%E5%B9%B3%E8%A7%A6%E5%8F%91"><span class="nav-text">2. 关于边缘触发和水平触发</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-%E5%B0%8F%E6%80%BB%E7%BB%93"><span class="nav-text">3.5. 小总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-6-%E5%8F%82%E8%80%83"><span class="nav-text">3.6. 参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E6%80%BB%E7%BB%93"><span class="nav-text">4. 总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://xemxx.github.io/2020/03/01/%E7%BD%91%E7%BB%9C/%E7%BD%91%E7%BB%9CIO%E6%A8%A1%E5%9E%8B%E4%BB%A5%E5%8F%8A%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xem">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Xem Blog">
+      <meta itemprop="description" content="分享技术学习路上的点滴">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="网络I/O模型以及多路复用 | Xem Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          网络I/O模型以及多路复用
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-03-01 14:27:04" itemprop="dateCreated datePublished" datetime="2020-03-01T14:27:04+08:00">2020-03-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-09-06 23:39:36" itemprop="dateModified" datetime="2022-09-06T23:39:36+08:00">2022-09-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>11k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>10 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>i/o模型事实上是一个通用的概念，本文主要通过介绍网络i/o模型以及具体解析i/o多路复用模型的原理来方便大家理解。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h2><p>网络通信双方通过socket建立连接后，当其中一个进程要进行一次read操作时，需要两个阶段</p>
+<p>第一阶段：等待数据</p>
+<p>第二阶段：从内核复制数据到用户进程</p>
+<p>在这两个阶段的不同处理方式产生了五种网络I/O模型：</p>
+<h2 id="2-五种I-O模型"><a href="#2-五种I-O模型" class="headerlink" title="2. 五种I/O模型"></a>2. 五种I/O模型</h2><h3 id="2-1-阻塞I-O"><a href="#2-1-阻塞I-O" class="headerlink" title="2.1. 阻塞I/O"></a>2.1. 阻塞I/O</h3><p>两个阶段全阻塞，recvfrom调用阻塞到syscall，确定数据准备好了，内核自动开始第二阶段，应用程序一直阻塞到返回数据</p>
+<p><img src="http://qiniu.xemxx.cn/20200227152000.png?imageslim"></p>
+<p><strong>缺点：</strong>每个连接需要独立的进程/线程单独处理，当并发请求量大时为了维护程序，内存、线程切换开销较大，这种模型在实际生产中很少使用。</p>
+<h3 id="2-2-非阻塞I-O"><a href="#2-2-非阻塞I-O" class="headerlink" title="2.2. 非阻塞I/O"></a>2.2. 非阻塞I/O</h3><p>第一阶段费非阻塞，即每次调用recvfrom，内核将立马返回是否可读可写，如果不可读可写，那么应用程序将一直调用来检查，第二阶段同样是一直阻塞到内核返回数据</p>
+<p><img src="http://qiniu.xemxx.cn/20200227215839.png?imageslim"></p>
+<p><strong>缺点：</strong>轮询是通过系统调用来获取，来回切换用户态和内核态，当fd特别多时，成本几何上升</p>
+<h3 id="2-3-I-O-多路复用"><a href="#2-3-I-O-多路复用" class="headerlink" title="2.3.  I/O 多路复用"></a>2.3.  I/O 多路复用</h3><p>由于同步非阻塞方式需要不断主动轮询，轮询占据了很大一部分过程，轮询会消耗大量的CPU时间，而 “后台” 可能有多个任务在同时进行，人们就想到了循环查询多个任务的完成状态，只要有任何一个任务完成，就去处理它。如果轮询不是进程的用户态，而是有人帮忙就好了。那么这就是所谓的 “IO 多路复用”。</p>
+<p>以select为例，当应用程序调用select时，会将多个socketfd交给内核，内核将循环扫描可用的socketfd，就是将轮询的任务交给了内核，此时应用程序阻塞在select上，直到select返回某个可用的fd，就可以开始第二阶段来获取内核的数据，这个阶段同样是阻塞的</p>
+<p><img src="http://qiniu.xemxx.cn/20200227215920.png?imageslim"></p>
+<h3 id="2-4-信号驱动I-O"><a href="#2-4-信号驱动I-O" class="headerlink" title="2.4. 信号驱动I/O"></a>2.4. 信号驱动I/O</h3><p>首先开启套接口<strong>信号驱动I/O</strong>功能，并通过系统调用<code>sigaction</code>执行一个<strong>信号处理函数</strong>(此系统调用立即返回，进程继续工作，它是非阻塞的)，这时候应用程序可以做其他事情。</p>
+<p>当数据准备就绪时，内核就为该进程生成一个<code>SIGIO</code>信号，通过<strong>信号回调</strong>通知应用程序调用recvfrom来读取数据，并通知应用程序处理数据，使得应用程序可以开始第二阶段调用recvfrom阻塞读取数据了</p>
+<p>就是在第一阶段构造一个信号处理器，并且发送给内核，这时候应用程序可以做其他事情，当内核准备好数据后通过主动给应用程序发送信号，使得应用程序可以开始第二阶段调用recvfrom阻塞读取数据了</p>
+<p><img src="http://qiniu.xemxx.cn/20200227233348.png?imageslim"></p>
+<p>信号驱动 I/O 尽管对于处理 UDP 套接字来说有用，即这种信号通知意味着到达一个数据报，或者返回一个异步错误。</p>
+<p>但是，对于 TCP 而言，信号驱动的 I/O 方式近乎无用，因为导致这种通知的条件为数众多，每一个来进行判别会消耗很大资源，与前几种方式相比优势尽失。</p>
+<h3 id="2-5-异步I-O"><a href="#2-5-异步I-O" class="headerlink" title="2.5. 异步I/O"></a>2.5. 异步I/O</h3><p>上面4中其实都被归纳为同步io，主要是因为第二阶段真正进行I/O操作时都是阻塞进程的，只有异步 I/O 模型才与 POSIX 定义的异步 I/O 相匹配，linux提供了AIO库函数实现异步，用户进程只需要发起aio_read，就可以做其他的事情了，内核会将两个阶段的事情全部做完后给用户进程发起通知，用户进程就可以处理数据了</p>
+<p><img src="http://qiniu.xemxx.cn/20200227233041.png?imageslim"></p>
+<p><strong>缺点：</strong>要实现真正的异步 I/O，操作系统需要做大量的工作。目前 Windows 下通过 IOCP 实现了真正的异步 I/O。</p>
+<h3 id="2-6-参考"><a href="#2-6-参考" class="headerlink" title="2.6. 参考"></a>2.6. 参考</h3><p><a target="_blank" rel="noopener" href="https://juejin.im/entry/5b9122fee51d450e3d2c9687">https://juejin.im/entry/5b9122fee51d450e3d2c9687</a></p>
+<p><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000021587865#item-1-2">https://segmentfault.com/a/1190000021587865#item-1-2</a></p>
+<h2 id="3-I-O多路复用的几种方式"><a href="#3-I-O多路复用的几种方式" class="headerlink" title="3. I/O多路复用的几种方式"></a>3. I/O多路复用的几种方式</h2><p>这么多模型，最常用的就是IO多路复用模型，这个和实际生产有关，因为当采用了复杂的模型，就会提升编程难度，但是简单模型又不能达到我们的业务需求，所以取中间值，，，IO多路复用模型（PS：我猜的/狗头）</p>
+<h3 id="3-1-Linux的socket-事件wakeup-callback机制"><a href="#3-1-Linux的socket-事件wakeup-callback机制" class="headerlink" title="3.1. Linux的socket 事件wakeup callback机制"></a>3.1. Linux的socket 事件wakeup callback机制</h3><p>在介绍select、poll、epoll前，有必要说说linux(2.6+)内核的事件wakeup callback机制，这是IO多路复用机制存在的<strong>本质</strong>。</p>
+<p>Linux通过socket睡眠队列来管理所有等待socket的某个事件的process，同时通过wakeup机制来异步唤醒整个睡眠队列上等待事件的process，通知process相关事件发生。</p>
+<p>我们可以理解为，每个socket维护了一个队列，比如socket可读的时候，内核就会唤醒队列里的各个Process，并且执行每个Process的<code>callback</code>函数。总体上会涉及两大逻辑：</p>
+<p><strong>睡眠等待逻辑</strong>：</p>
+<ul>
+<li><code>select</code>、<code>poll</code>、<code>epoll_wait</code>陷入内核，判断监控的socket是否有关心的事件发生了，如果没，则为当前Process构建一个<code>wait_entry</code>节点，然后插入到监控socket的<code>sleep_list</code>里。</li>
+<li>Linux调用<code>schedule</code>函数进行Process的状态转换，<code>shcedule</code>函数是Linux的调度Process的函数，这里指的是Process进入<code>sleep</code>直到超时或者事件发生，简单说就是将没有事件发生的process阻塞睡眠。</li>
+<li>关心的事件发生后，将当前Process的<code>wait_entry</code>节点从socket的<code>sleep_list</code>中删除。</li>
+</ul>
+<p><strong>唤醒逻辑：</strong></p>
+<ul>
+<li>socket的事件发生了，然后socket顺序遍历其睡眠队列<code>sleep_list</code>，依次调用每个<code>wait_entry</code>节点（对应各个Process）的<code>callback</code>函数。</li>
+<li>直到完成队列的遍历或遇到某个<code>wait_entry</code>节点是排他的才停止。</li>
+<li>一般情况下<code>callback</code>包含两个逻辑：<ul>
+<li>wait_entry自定义的私有逻辑；</li>
+<li>唤醒的公共逻辑，主要用于将该wait_entry的process放入CPU的就绪队列，让CPU随后可以调度其执行。</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-2-select"><a href="#3-2-select" class="headerlink" title="3.2. select"></a>3.2. select</h3><h4 id="基本原理"><a href="#基本原理" class="headerlink" title="基本原理"></a>基本原理</h4><p>大多情况下一个服务进程(线程)process需要同时处理多个socket，我们需要公平对待所有socket，对于read而言，哪个socket有数据可读，process就去读取该socket的数据来处理。</p>
+<p>于是对于read，一个基本的需求就是关心的N个socket是否有数据<strong>可读</strong>，也就是我们期待<strong>可读</strong>事件的通知，而不是盲目地对每个socket调用recv/recvfrom来尝试接收数据。</p>
+<p>我们应该block在等待事件的发生上，这个事件简单点就是<strong>关心的N个socket中一个或多个socket有数据可读了</strong>，当block解除的时候，就意味着，我们一定可以找到一个或多个socket上有可读的数据。</p>
+<p>另一方面，根据上面的<code>socket wakeup callback</code>机制，我们不知道什么时候，哪个socket会有读事件发生，于是，process需要同时插入到这N个socket的sleep_list上等待任意一个socket可读事件发生而被唤醒，当时process被唤醒的时候，其callback里面应该有个逻辑去检查具体那些socket可读了，然后把这些事件反馈给用户程序，用户程序就知道，哦，我该处理这些socket了，我可以从这些socket里读取数据了。</p>
+<p>于是，select的多路复用逻辑就清晰了，select为每个socket引入一个poll逻辑，该poll逻辑用于收集socket发生的事件，对于可读事件来说，简单伪码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">int</span> sk_event;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">poll</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//其他逻辑</span></span><br><span class="line">    <span class="keyword">if</span> (recieve queque is <span class="keyword">not</span> empty)</span><br><span class="line">    &#123;</span><br><span class="line">        sk_event |= POLL_IN；</span><br><span class="line">    &#125;</span><br><span class="line">   <span class="comment">//其他逻辑</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong>当<code>receive queue</code>不为空的时候，我们就给这个socket的<code>sk_event</code>添加一个<code>POLL_IN</code>事件，用来表示当前这个socket可读。将来Process遍历到这个socket，发现其<code>sk_event</code>包含<code>POLL_IN</code>的时候，就可以对这个socket进行读取数据操作了。</p>
+<p>接下来就到select的逻辑了，下面是select的函数原型：5个参数，后面4个参数都是in/out类型（当有可读事件发生时，3个<code>fd_set</code>参数会被修改指向一个新的<code>fd_set</code>，就是可读的集合，方便调用<code>FD_ISSET</code>来判断是否有可读fd）</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">select</span><span class="params">(<span class="type">int</span> nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, <span class="keyword">struct</span> timeval *timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>当用户Process调用<code>select</code>的时候，<code>select</code>会将需要监控的<code>readfds</code>集合拷贝到内核空间（因为内核才能通知说某个socket可读），然后遍历自己监控的socket，挨个调用socket的poll逻辑以便检查该socket是否有可读事件。</p>
+<p>遍历完所有的socket后，如果没有任何一个sk可读，那么<code>select</code>会调用<code>schedule</code>，使得Process进入睡眠（或者睡眠timeout这么长时间）。如果在timeout时间内某个socket上有数据可读了，或者等待timeout了，则调用select的Process会被唤醒。</p>
+<p>接下来<code>select</code>就是遍历监控的socket集合，挨个收集可读事件并返回给用户了，相应的伪码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (socket in readfds) &#123;</span><br><span class="line">    sk_event.evt = socket.<span class="built_in">poll</span>();</span><br><span class="line">    sk_event.sk = socket;</span><br><span class="line">    return_event_for_process;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>总结一下我们发现<code>select</code>有两个问题：</p>
+<ol>
+<li>被监控的<code>readfds</code>需要从用户空间拷贝到内核空间。为了减少数据拷贝带来的性能损坏，内核对被监控的<code>fds</code>集合大小做了限制，并且这个是通过宏控制的（可以通过<code>sizeof(fd_set)</code>得到总字节大小，但是fd是通过每个bit表示的），大小不可改变，只能通过重新编译内核等复杂方式改变。</li>
+<li>被监控的<code>readfds</code>集合中，只要有一个有数据可读，整个socket集合就会被遍历一次并且调用socket的<code>poll</code>函数收集可读事件。</li>
+</ol>
+<p>说到这，我们有几个问题要解决：</p>
+<ol>
+<li>被监控的fds集合限制为1024（通常在32位机器是这样的），1024太小了，我们希望能够有个比较大的可监控fds集合。</li>
+<li>fds集合需要从用户空间拷贝到内核空间的问题，我们希望不需要拷贝。</li>
+<li>当被监控的fds中某些有数据可读的时候，我们希望通知更加精细一点，就是我们希望能够从通知中得到有可读事件的fds列表，而不是需要遍历整个fds来收集。</li>
+</ol>
+<p><strong><a target="_blank" rel="noopener" href="https://www.cnblogs.com/skyfsm/p/7079458.html">C语言select使用参考</a></strong></p>
+<h3 id="3-3-poll"><a href="#3-3-poll" class="headerlink" title="3.3. poll"></a>3.3. poll</h3><p>首先这里的<code>poll</code>不是上面<code>select</code>中用来判断<code>socket</code>状态的<code>poll</code>，对于<code>socket</code>，<code>poll</code>方法是<code>sock_poll</code>，<code>sock_poll</code>根据情况会调用到<code>tcp_poll</code>,<code>udp_poll</code>或者<code>datagram_poll</code>。</p>
+<p><code>poll</code>非常鸡肋，只解决了第一个问题——1024的问题。poll改变了fds集合的描述方式，使用了<code>pollfd</code>结构而不是<code>select</code>的<code>fd_set</code>结构，使得<code>poll</code>支持的fds集合限制远大于select的1024。</p>
+<p>但是，<code>poll</code>并没改变大量描述符数组被整体复制于用户态和内核态的地址空间之间，以及个别描述符就绪触发整体描述符集合的遍历的低效问题。<code>poll</code>随着监控的<code>socket</code>集合的增加性能线性下降，<code>poll</code>不适合用于大并发场景。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">poll</span><span class="params">(<span class="keyword">struct</span> pollfd *fds, <span class="type">nfds_t</span> nfds, <span class="type">int</span> timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-4-epoll"><a href="#3-4-epoll" class="headerlink" title="3.4. epoll"></a>3.4. epoll</h3><h4 id="1-基本原理"><a href="#1-基本原理" class="headerlink" title="1. 基本原理"></a>1. 基本原理</h4><p>问题1被poll解决了，2和3就被<code>epoll</code>解决了。</p>
+<p>这里抄一段话，计算机世界里，有两大解决问题的方式：</p>
+<ol>
+<li>计算机科学领域的任何问题, 都可以通过添加一个中间层来解决。</li>
+<li>变集中处理为分散处理。</li>
+</ol>
+<p>首先可以看<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000003063859">这篇文章</a>关于epoll操作过程部分，了解基本使用过程。</p>
+<p><strong>fds集合拷贝问题的解决</strong></p>
+<p>对于IO多路复用，有两件事是必须要做的(对于监控可读事件而言)：</p>
+<ol>
+<li>准备好需要监控的fds集合。</li>
+<li>探测并返回fds集合中哪些fd可读了。</li>
+</ol>
+<p>细看select或poll的函数原型，我们会发现，每次调用select或poll都在重复地准备(集中处理)整个需要监控的fds集合。然而对于频繁调用的select或poll而言，fds集合的变化频率要低得多，我们没必要每次都重新准备(集中处理)整个fds集合。</p>
+<p>于是，<code>epoll</code>引入了<code>epoll_ctl</code>系统调用，将高频调用的<code>epoll_wait</code>和低频的<code>epoll_ctl</code>隔离开。<code>epoll_ctl</code>通过(<code>EPOLL_CTL_ADD</code>、<code>EPOLL_CTL_MOD</code>、<code>EPOLL_CTL_DEL</code>)三个操作来分散对需要监控的fds集合的修改，做到了有变化才变更，将<code>select</code>或<code>poll</code>高频、大块内存拷贝变成<code>epoll_ctl</code>的低频、小块内存的拷贝，避免了大量的内存拷贝。这就是我们说的，分散处理方式。</p>
+<p>同时，对于高频<code>epoll_wait</code>的可读就绪的fd集合返回的拷贝问题，<code>epoll</code>通过内核与用户空间<code>mmap</code>同一块内存来解决。<code>mmap</code>将用户空间的一块地址和内核空间的一块地址同时映射到相同的一块物理内存地址（不管是用户空间还是内核空间都是虚拟地址，最终要通过地址映射映射到物理地址），使得这块物理内存对内核和对用户均可见，减少用户态和内核态之间的数据交换。</p>
+<p>另外，<code>epoll</code>通过<code>epoll_ctl</code>来对监控的fds集合来进行增、删、改，那么必须涉及到fd的快速查找问题。于是，一个低时间复杂度的增、删、改、查的数据结构来组织被监控的fds集合是必不可少的了。</p>
+<p>在linux 2.6.8之前的内核，<code>epoll</code>使用<code>hash</code>来组织fds集合，于是在创建<code>epoll fd</code>的时候，<code>epoll</code>需要初始化<code>hash</code>的大小。于是<code>epoll_create(int size)</code>有一个参数<code>size</code>，以便内核根据<code>size</code>的大小来分配<code>hash</code>的大小。在linux 2.6.8以后的内核中，<code>epoll</code>使用<strong>红黑树</strong>来组织监控的fds集合，所以参数<code>size</code>实际上已经没有意义了。</p>
+<p><strong>按需遍历就绪的fds集合</strong></p>
+<p>通过上面的socket的睡眠队列唤醒逻辑我们知道，socket唤醒睡眠在其睡眠队列的<code>wait_entry</code>的时候会调用<code>wait_entry</code>的回调函数<code>callback</code>，并且，我们可以在<code>callback</code>中做任何事情。为了做到只遍历就绪的fd，我们需要有个地方来组织那些已经就绪的fd。</p>
+<p>为此，<code>epoll</code>引入了一个中间层，一个双向链表<code>ready_list</code>，一个单独的睡眠队列<code>single_epoll_wait_list</code>，并且，与<code>select</code>或<code>poll</code>不同的是，<code>epoll</code>的Process不需要同时插入到多路复用的socket集合的所有睡眠队列中，相反Process只是插入到中间层的<code>epoll</code>的单独睡眠队列中（即<code>single_epoll_wait_list</code>），Process睡眠在<code>epoll</code>的单独队列上，等待事件的发生。同时，引入一个中间代理的<code>wait_entry_sk</code>，它与某个socket密切相关，<code>wait_entry_sk</code>睡眠在socket的睡眠队列上，其<code>callback</code>函数逻辑是将当前socket排入到<code>epoll</code>的<code>ready_list</code>中，并唤醒<code>epoll</code>的<code>single_epoll_wait_list</code>。而<code>single_epoll_wait_list</code>上睡眠的Process的回调函数就明朗了：遍历<code>ready_list</code>上的所有socket，挨个调用socket的<code>poll</code>函数收集事件，然后唤醒Process从<code>epoll_wait</code>返回。<br>语言很苍白，我们看下图：</p>
+<p><img src="http://qiniu.xemxx.cn/20200301130031.png?imageslim"></p>
+<p>四张图代表四种状态：</p>
+<ol>
+<li>调用<code>epoll</code>之前，我们希望我们的<code>MyProcess</code>可以管理四个socket。</li>
+<li>四个socket都没有事件，这时候<code>MyProcess</code>进入<code>single_epoll_wait_list</code>并且<code>sleep</code>。</li>
+<li>有一个socket（大红色）收到了数据，触发其<code>wait_entry_sk</code>，把这个socket加入到<code>ready_list</code>里。</li>
+<li><code>MyProcess</code>被唤醒（从<code>single_epoll_wait_list</code>出来了表示被唤醒），来处理<code>ready_list</code>中的所有socket：遍历<code>epoll</code>的<code>ready_list</code>，挨个调用每个socket的<code>poll</code>逻辑收集发生的事件，对于监控可读事件而已，<code>ready_list</code>上的每个socket都是有数据可读的，这里的遍历必要的。</li>
+<li>此外，这里的<code>MyProcess</code>并不是直接在<code>single_epoll_wait_list</code>中的，而是通过一个睡眠实体<code>wait_entry_proc</code>，所以上面第四步，并不是直接在用户态调用socket的poll逻辑，还是在内核态中调用，并且是由epoll来操作的。这点在后面会讲述。</li>
+<li>如果还是不能理解请参考<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/ee381d365a29">这篇文章</a>的代码部分，或者自行搜索示例代码进行理解</li>
+</ol>
+<p>至此，我们就可以理解说为什么<code>epoll</code>才是真正高性能的方式：</p>
+<ul>
+<li>首先通过共享内存的方式减少用户态到内核态的数据拷贝</li>
+<li>然后分离两种操作：高频调用的<code>epoll_wait</code>和低频的<code>epoll_ctl</code>，并且所有的fds由epoll来管理</li>
+<li>每次<code>epoll_wait</code>，都会返回所有可用的<code>ready_list</code>，保证了每个都是需要处理的socket，但是select和poll不一样：<ul>
+<li>select返回一个<code>fd_set</code>，它包含了一个所有fd的集合，<code>fd_set</code>是采用一个bit来标识每个fd的，所以需要我们遍历调用<code>FD_ISSET</code>宏来判断每个fd是否可用，当然也可以单独用数组保存自己需要监控的fd然后去遍历。</li>
+<li>poll返回的是原数组<code>struct pollfd fds[]</code>，只是修改了其中的fd事件属性，虽然不是说每次都需要遍历固定大小例如1024的次数来判断，但是至少需要判断所有需要监控的fd</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-关于边缘触发和水平触发"><a href="#2-关于边缘触发和水平触发" class="headerlink" title="2. 关于边缘触发和水平触发"></a>2. 关于边缘触发和水平触发</h4><p>我们说两种模式前，要先说一下<code>epoll</code>的唤醒逻辑：</p>
+<ol>
+<li>协议数据包到达网卡并被排入socket的接收队列。</li>
+<li>睡眠在socket的睡眠队列<code>wait_entry</code>被唤醒，<code>wait_entry_sk</code>的回调函数<code>epoll_callback_sk</code>被执行。</li>
+<li><code>epoll_callback_sk</code>将当前socket插入<code>epoll</code>的<code>ready_list</code>中。</li>
+<li>唤醒睡眠在<code>epoll</code>的单独睡眠队列<code>single_epoll_wait_list</code>的<code>wait_entry_proc</code>，<code>wait_entry_proc</code>被唤醒执行回调函数<code>epoll_callback_proc</code>：<ol>
+<li>遍历<code>epoll</code>的<code>ready_list</code>，挨个调用每个socket的<code>poll</code>逻辑收集发生的事件。</li>
+<li>将每个socket收集到的事件，通过<code>epoll_wait</code>传入的<code>events</code>数组回传并唤醒相应的Process。</li>
+</ol>
+</li>
+</ol>
+<p>大的逻辑其实没有变化，我们之前提过<code>wait_entry_proc</code>和<code>epoll_callback_proc</code>，这里简单说一下：</p>
+<p><strong>wait_entry_proc</strong>：睡眠实体，将当前Process关联给<code>wait_entry_proc</code>，并设置回调函数为<code>epoll_callback_proc</code>。我们之前说睡眠在<code>single_epoll_wait_list</code>中的是Process，其实是包了一层的<code>wait_entry_proc</code>。</p>
+<p><strong>epoll_callback_proc</strong>：回调函数，主要逻辑是遍历<code>epoll</code>的<code>ready_list</code>，挨个调用每个socket的<code>poll</code>逻辑收集发生的事件，然后将每个socket收集到的事件，通过<code>epoll_wait</code>传入的<code>events</code>数组回传并唤醒相应的Process。</p>
+<p>那么两种触发模式的本质，就在唤醒逻辑里我们说的第4-1步。真实的情况应该是这样的：</p>
+<p><strong>对于边沿触发（ET）</strong>：<br>遍历<code>epoll</code>的<code>ready_list</code>，将socket从<code>ready_list</code>中移除，然后调用该socket的<code>poll</code>逻辑收集发生的事件。</p>
+<p><strong>对于水平触发（LT）</strong>：</p>
+<ol>
+<li>遍历<code>epoll</code>的<code>ready_list</code>，将socket从<code>ready_list</code>中移除，然后调用该socket的<code>poll</code>逻辑收集发生的事件。</li>
+<li>如果该socket的<code>poll</code>函数返回了关心的事件（对于可读事件来说，就是<code>POLL_IN</code>事件），那么该socket被重新加入到epoll的ready_list中！</li>
+</ol>
+<p>对于可读事件而言，在ET模式下，如果某个socket有新的数据到达，那么该sk就会被排入epoll的ready_list，从而epoll_wait就一定能收到可读事件的通知(调用sk的poll逻辑一定能收集到可读事件)。于是，我们通常理解的缓冲区状态变化(从无到有)的理解是不准确的，准确的理解应该是是否有新的数据达到缓冲区。</p>
+<p>而在LT模式下，某个sk被探测到有数据可读，那么该sk会被重新加入到read_list，那么在该sk的数据被全部取走前，下次调用epoll_wait就一定能够收到该sk的可读事件(调用sk的poll逻辑一定能收集到可读事件)，从而epoll_wait就能返回。</p>
+<p><strong>PS：</strong>下面的性能和复杂度可以考虑跳过，因为在实际使用过程中自然会有感悟。</p>
+<p><strong>性能</strong></p>
+<p>通过上面的概念介绍，我们知道对于可读事件而言，LT比ET多了两个操作：</p>
+<ul>
+<li>对ready_list的遍历的时候，对于收集到可读事件的sk会重新放入ready_list</li>
+<li>下次epoll_wait的时候会再次遍历上次重新放入的sk，如果sk本身没有数据可读了，那么这次遍历就变得多余了。 </li>
+</ul>
+<p>在服务端有海量活跃socket的时候，LT模式下，epoll_wait返回的时候，会有海量的socket sk重新放入ready_list。如果，用户在第一次epoll_wait返回的时候，将有数据的socket都处理掉了，那么下次epoll_wait的时候，上次epoll_wait重新入ready_list的sk被再次遍历就有点多余，这个时候LT确实会带来一些性能损失。然而，实际上会存在很多多余的遍历么？</p>
+<p>先不说第一次epoll_wait返回的时候，用户进程能否都将有数据返回的socket处理掉。在用户处理的过程中，如果该socket有新的数据上来，那么协议栈发现sk已经在ready_list中了，那么就不需要再次放入ready_list，也就是在LT模式下，对该sk的再次遍历不是多余的，是有效的。同时，我们回归epoll高效的场景在于，服务器有海量socket，但是活跃socket较少的情况下才会体现出epoll的高效、高性能。因此，在实际的应用场合，绝大多数情况下，ET模式在性能上并不会比LT模式具有压倒性的优势，</p>
+<p><strong>复杂度</strong></p>
+<p>我们知道，对于可读事件而言，在阻塞模式下，是无法识别队列空的事件的，并且，事件通知机制，仅仅是通知有数据，并不会通知有多少数据。于是，在阻塞模式下，在epoll_wait返回的时候，我们对某个socket_fd调用recv或read读取并返回了一些数据的时候，我们不能再次直接调用recv或read，因为，如果socket_fd已经无数据可读的时候，进程就会阻塞在该socket_fd的recv或read调用上，这样就影响了IO多路复用的逻辑(我们希望是阻塞在所有被监控socket的epoll_wait调用上，而不是单独某个socket_fd上)，造成其他socket饿死，即使有数据来了，也无法处理。</p>
+<p>接下来，我们只能再次调用epoll_wait来探测一些socket_fd，看是否还有数据可读。在LT模式下，如果socket_fd还有数据可读，那么epoll_wait就一定能够返回，接着，我们就可以对该socket_fd调用recv或read读取数据。然而，在ET模式下，尽管socket_fd还是数据可读，但是如果没有新的数据上来，那么epoll_wait是不会通知可读事件的。这个时候，epoll_wait阻塞住了，这下子坑爹了，明明有数据你不处理，非要等新的数据来了在处理，那么我们就死扛咯，看谁先忍不住。</p>
+<p>等等，在阻塞模式下，不是不能用ET的么？是的，正是因为有这样的缺点，ET强制需要在非阻塞模式下使用。在ET模式下，epoll_wait返回socket_fd有数据可读，我们必须要读完所有数据才能离开。因为，如果不读完，epoll不会在通知你了，虽然有新的数据到来的时候，会再次通知，但是我们并不知道新数据会不会来，以及什么时候会来。由于在阻塞模式下，我们是无法通过recv/read来探测空数据事件，于是，我们必须采用非阻塞模式，一直read直到EAGAIN。因此，ET要求socket_fd非阻塞也就不难理解了。</p>
+<p>另外，epoll_wait原本的语意是：监控并探测socket是否有数据可读(对于读事件而言)。LT模式保留了其原本的语意，只要socket还有数据可读，它就能不断反馈，于是，我们想什么时候读取处理都可以，我们永远有再次poll的机会去探测是否有数据可以处理，这样带来了编程上的很大方便，不容易死锁造成某些socket饿死。相反，ET模式修改了epoll_wait原本的语意，变成了：监控并探测socket是否有新的数据可读。</p>
+<p>于是，在epoll_wait返回socket_fd可读的时候，我们需要小心处理，要不然会造成死锁和socket饿死现象。典型如listen_fd返回可读的时候，我们需要不断的accept直到EAGAIN。假设同时有三个请求到达，epoll_wait返回listen_fd可读，这个时候，如果仅仅accept一次拿走一个请求去处理，那么就会留下两个请求，如果这个时候一直没有新的请求到达，那么再次调用epoll_wait是不会通知listen_fd可读的，于是epoll_wait只能睡眠到超时才返回，遗留下来的两个请求一直得不到处理，处于饿死状态。</p>
+<h3 id="3-5-小总结"><a href="#3-5-小总结" class="headerlink" title="3.5. 小总结"></a>3.5. 小总结</h3><p><strong>Select/poll</strong></p>
+<p>两者都是将一定的fd集合发送给内核，然后内核通过轮询的方式获取可用fd，然后返回所有的合集，其中select有最大fd限制，默认为1024，而poll则没有，因为poll采用了链表的数据结构，但是两者的缺点很明显，当每次只有一个fd可用时，太浪费时间，并且有内存浪费，因为每次都要将fd集合复制到内核</p>
+<p><strong>epoll</strong></p>
+<ul>
+<li>epoll支持的FD上限是操作系统的最大文件句柄数，这个数字远远大于1024</li>
+<li>通过mmap保存fd集合，不需要每次都复制到内核</li>
+<li>只会对“活跃”的socket进行操作-这是因为在内核实现中，epoll是根据每个fd上面的callback函数实现的。那么只有“活跃”的socket才会去主动调用callback函数，其他idle状态的socket则不会。</li>
+<li>ET模式就是对于每个事件，只返回一次，LT模式就是对于每个事件，只要socket的poll逻辑判断发生了，就能一直返回</li>
+</ul>
+<h3 id="3-6-参考"><a href="#3-6-参考" class="headerlink" title="3.6. 参考"></a>3.6. 参考</h3><p><a target="_blank" rel="noopener" href="http://b.shiwuliang.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3SELECT%E3%80%81POLL%E5%92%8CEPOLL%20.html">三篇一样的文章1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.iminho.me/wiki/blog-23.html">三篇一样的文章2</a></p>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1005481">三篇一样的文章3</a></p>
+<p><a target="_blank" rel="noopener" href="https://tqr.ink/2017/10/05/implementation-of-epoll/">从源码分析</a></p>
+<h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4. 总结"></a>4. 总结</h2><p>这篇文章基本总结了网络I/O模型中的问题，除去基本使用的代码没有具体给出，目前主要的问题基本在于I/O多路复用，所以花了大部分来讲述，不过其实异步I/O也是一门大学问，这里只是简单点了一下，毕竟是一篇博客记录，太长也没耐心看，但是我也是花了几天时间才彻底搞懂其中的道理，大家耐心看完会有所收获的。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"><i class="fa fa-tag"></i> linux</a>
+              <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="tag"><i class="fa fa-tag"></i> 网络编程</a>
+              <a href="/tags/select/" rel="tag"><i class="fa fa-tag"></i> select</a>
+              <a href="/tags/poll/" rel="tag"><i class="fa fa-tag"></i> poll</a>
+              <a href="/tags/epoll/" rel="tag"><i class="fa fa-tag"></i> epoll</a>
+              <a href="/tags/i-o%E6%A8%A1%E5%9E%8B/" rel="tag"><i class="fa fa-tag"></i> i/o模型</a>
+              <a href="/tags/i-o%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8/" rel="tag"><i class="fa fa-tag"></i> i/o多路复用</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/02/27/linux/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1IPC/" rel="prev" title="进程间通信IPC">
+                  <i class="fa fa-chevron-left"></i> 进程间通信IPC
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/03/14/%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/hexo%E9%80%9A%E8%BF%87github%E7%9A%84webhooks%E9%83%A8%E7%BD%B2/" rel="next" title="hexo通过github的webhooks部署">
+                  hexo通过github的webhooks部署 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">78k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:10</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

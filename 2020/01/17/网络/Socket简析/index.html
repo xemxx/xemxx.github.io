@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xemxx.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"style":null,"show_result":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="用过了WebSocket，来看看Socket是咋回事">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Socket简析">
+<meta property="og:url" content="https://xemxx.github.io/2020/01/17/%E7%BD%91%E7%BB%9C/Socket%E7%AE%80%E6%9E%90/index.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="用过了WebSocket，来看看Socket是咋回事">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200117231838.png?imageslim">
+<meta property="og:image" content="http://qiniu.xemxx.cn/20200117182625.png?imageslim">
+<meta property="article:published_time" content="2020-01-17T15:06:39.000Z">
+<meta property="article:modified_time" content="2022-09-06T15:39:36.538Z">
+<meta property="article:author" content="Xem">
+<meta property="article:tag" content="socket">
+<meta property="article:tag" content="tcp">
+<meta property="article:tag" content="unix">
+<meta property="article:tag" content="网络编程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://qiniu.xemxx.cn/20200117231838.png?imageslim">
+
+
+<link rel="canonical" href="https://xemxx.github.io/2020/01/17/%E7%BD%91%E7%BB%9C/Socket%E7%AE%80%E6%9E%90/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://xemxx.github.io/2020/01/17/%E7%BD%91%E7%BB%9C/Socket%E7%AE%80%E6%9E%90/","path":"2020/01/17/网络/Socket简析/","title":"Socket简析"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Socket简析 | Xem Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Xem Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF-socket%EF%BC%9F"><span class="nav-text">一、什么是 socket？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-UNIX-Linux%E4%B8%AD%E7%9A%84-socket-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-text">1.1 UNIX&#x2F;Linux中的 socket 是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-Window-%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84-socket-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-text">1.2 Window 系统中的 socket 是什么？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81socket%E5%81%9A%E4%BA%86%E5%93%AA%E4%BA%9B%E4%BA%8B%E6%83%85"><span class="nav-text">二、socket做了哪些事情</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Socket%E5%88%86%E7%B1%BB"><span class="nav-text">三、Socket分类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E6%9C%BA%E5%88%B6%E4%B8%8D%E5%90%8C"><span class="nav-text">3.1 底层数据传输机制不同</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E6%9C%BA%E5%88%B6%E7%9B%B8%E5%90%8C"><span class="nav-text">3.2 底层数据传输机制相同</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-%E6%80%BB%E7%BB%93"><span class="nav-text">3.3 总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E4%BD%BF%E7%94%A8"><span class="nav-text">四、使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-text">五、总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">27</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://xemxx.github.io/2020/01/17/%E7%BD%91%E7%BB%9C/Socket%E7%AE%80%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xem">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Xem Blog">
+      <meta itemprop="description" content="分享技术学习路上的点滴">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Socket简析 | Xem Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Socket简析
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-01-17 23:06:39" itemprop="dateCreated datePublished" datetime="2020-01-17T23:06:39+08:00">2020-01-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2022-09-06 23:39:36" itemprop="dateModified" datetime="2022-09-06T23:39:36+08:00">2022-09-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>5.8k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>5 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>用过了WebSocket，来看看Socket是咋回事</p>
+</blockquote>
+<span id="more"></span>
+
+<p><img src="http://qiniu.xemxx.cn/20200117231838.png?imageslim"></p>
+<blockquote>
+<p>一直用着HTTP，然后因为面试，所以接触了TCP/IP，甚至UDP等，后续又听说微服务的RPC和进程间的IPC，然而这些东西都有一些共同点就是都属于进程间通信，只是说进程可能位于同一台主机或者不同主机，究其底层原理，看到了socket，本文主要是深入了解下socket的内容。</p>
+</blockquote>
+<h2 id="一、什么是-socket？"><a href="#一、什么是-socket？" class="headerlink" title="一、什么是 socket？"></a>一、什么是 socket？</h2><p>“什么”这种东西能在百度百科得到的，就不再赘述，不过看到一个比较有意思的比喻：</p>
+<p>我们把插头插到插座上就能从电网获得电力供应，同样，为了与远程计算机进行数据传输，需要连接到因特网，而 socket 就是用来连接到因特网的工具。</p>
+<p>然后我能给出的理解是：我们以前会采用书信来传输信息，现在用网络，那么需要一个承载物，我们的信息能够转化为电信号在线路上传输，所以我们只需要在两端接收即可，这个用于接收的东西，便是socket，在概念上是一个抽象的东西，但是在本质上，它是一个文件。</p>
+<h3 id="1-1-UNIX-Linux中的-socket-是什么？"><a href="#1-1-UNIX-Linux中的-socket-是什么？" class="headerlink" title="1.1 UNIX/Linux中的 socket 是什么？"></a>1.1 UNIX/Linux中的 socket 是什么？</h3><p>你也许听很多高手说过，UNIX/Linux 中的一切都是文件！那个家伙说的没错。</p>
+<p>在 UNIX/Linux 系统中，为了统一对各种硬件的操作，简化接口，不同的硬件设备也都被看成一个文件。对这些文件的操作，等同于对磁盘上普通文件的操作。</p>
+<p>请注意，网络连接也是一个文件，它也有文件描述符。</p>
+<p>我们可以通过 socket() 函数来创建一个网络连接，或者说打开一个网络文件，socket() 的返回值就是文件描述符。有了文件描述符，我们就可以使用普通的文件操作函数来传输数据了，例如：</p>
+<ul>
+<li>用 read() 读取从远程计算机传来的数据；</li>
+<li>用 write() 向远程计算机写入数据。</li>
+</ul>
+<h3 id="1-2-Window-系统中的-socket-是什么？"><a href="#1-2-Window-系统中的-socket-是什么？" class="headerlink" title="1.2 Window 系统中的 socket 是什么？"></a>1.2 Window 系统中的 socket 是什么？</h3><p>Windows 也有类似“文件描述符”的概念，但通常被称为“文件句柄”。</p>
+<p>与 UNIX/Linux 不同的是，Windows 会区分 socket 和文件，Windows 就把 socket 当做一个网络连接来对待，因此需要调用专门针对 socket 而设计的数据传输函数，针对普通文件的输入输出函数就无效了。</p>
+<p>以下摘自百度百科：</p>
+<p><img src="http://qiniu.xemxx.cn/20200117182625.png?imageslim"></p>
+<h2 id="二、socket做了哪些事情"><a href="#二、socket做了哪些事情" class="headerlink" title="二、socket做了哪些事情"></a>二、socket做了哪些事情</h2><p>熟悉操作系统和计算机组成原理的同学会知道我们所有的数据实际上都是在存储器中进行操作，只是通过不同的存储器分类，实现了缓存，硬盘，内存等一系列存储器，假设现在你要编程网络程序，进行服务器端和客户端的通信（数据交换），不使用 socket 的话，你会做下面的一堆事情：</p>
+<ul>
+<li>管理缓存区来接收和发送数据</li>
+<li>告诉操作系统自己要监听某个端口的数据，还有自己处理这些系统调用来读取数据</li>
+<li>当没有连接的时候或者另外一端要还没有发送数据时候，要处理 IO 阻塞，把自己挂起</li>
+<li>封装和解析 tcp/ip 协议的数据，维护数据发送的顺序</li>
+<li>等等</li>
+</ul>
+<p>做了一大堆东西，发现最重要的还没有做：发送/接收数据。如果有一个程序能够自动帮我们把上面的东西都做掉，这样我们就可以只关心数据的读写，编程就简单的多了。那么这样一个程序就是 socket，它现在已经是操作系统的一部分，在 linux 中是标准的系统调用（当然Windows也提供了，都是基于posix标准），通过这些调用，我们就能轻松地建立连接，读写数据，关闭连接，让网络操作就像文件操作一样简单。</p>
+<p>事实上socket就是做了一系列基础性的底层数据操作的事情，让我们能够简单的编程。</p>
+<h2 id="三、Socket分类"><a href="#三、Socket分类" class="headerlink" title="三、Socket分类"></a>三、Socket分类</h2><p>在了解了Socket的本质，便开始考虑它的实际用途，其实不同人有不同的理解，分类只是为了方便本文叙述，至于为什么，后续会讲到，首先给出一个知识点方便理解为什么有这些分类：</p>
+<p>内存的拷贝问题（网上都说零拷贝，但是也有反对的声音，我这里不做认可和反对）：</p>
+<p>主要过程就是我们从磁盘中读取文件数据然后通过socket发送网络的另一方，其中又因为<a href="https://xemxx.github.io/2020/01/14/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/%E7%94%A8%E6%88%B7%E6%80%81%E5%92%8C%E5%86%85%E6%A0%B8%E6%80%81/">内核态和用户态</a>的问题涉及到了三个缓冲区需要进行数据传输，其中socket就占用其中一个，所以可以得知socket本身是在传输层之上的，它需要其他的数据传输机制来提供支持，但是正因为底层的数据传输层机制而出现了因应用场景不同而出现的分类。</p>
+<p>网上的分类很多，这里我归纳了一下：</p>
+<ul>
+<li>对socket进行分类（底层数据传输机制不同）<ul>
+<li>Internet domain socket（Internet 套接字）</li>
+<li>Unix domain socket（Unix套接字）</li>
+</ul>
+</li>
+<li>socket有哪些类型（底层数据传输机制相同）<ul>
+<li>SOCK_STREAM（流格式套接字）</li>
+<li>SOCK_DGRAM（数据报格式套接字）</li>
+<li>SOCK_RAW（原始套接字）</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-1-底层数据传输机制不同"><a href="#3-1-底层数据传输机制不同" class="headerlink" title="3.1 底层数据传输机制不同"></a>3.1 底层数据传输机制不同</h3><p>Internet domain socket（Internet 套接字）可以用于不同<strong>主机间进程</strong>的通信，只要知道了对方的ip地址和端口就可以通信了所以这种socket通信是基于<strong>网络协议栈</strong>的。</p>
+<p>Unix domain socket（Unix套接字）用于<strong>同主机间进程</strong>通信，不需要基于网络协议，主要是基于<strong>文件系统</strong>的。与Internet domain socket类似，需要知道是基于哪一个文件（相同的文件路径）来通信的。</p>
+<p>此外，在应用方面的区别有unix domain socket 适合IPC ，Internet domain socket 适合RPC，其实很简单的道理，根据使用方式就能知道两者的适用场景不通，但是我们需要考虑的底层实现，两者应该在socket的处理上是一样的，只是在数据传输上的封装不一样。</p>
+<p><strong>简单说</strong>：Internet套接字主要是用于TCP等网络协议之上，而Unix套接字主要是可以直接获取到socket文件地址，通过<strong>unix:文件绝对路径</strong>来获取socket端从而实现通信效果，最基本的例子就是nginx中反向代理php-fpm的两种方式：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">fastcgi_pass</span> <span class="number">127.0.0.1:9000</span></span><br><span class="line"><span class="comment">#or</span></span><br><span class="line">fastcgi_pass unix:/var/run/php-fpm/php-fpm.sock</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-2-底层数据传输机制相同"><a href="#3-2-底层数据传输机制相同" class="headerlink" title="3.2 底层数据传输机制相同"></a>3.2 底层数据传输机制相同</h3><p>其实这个分类主要是当我们从socket中读取数据时，需要通过何种方式来获取数据而出现的分类。</p>
+<p>通过大家喜闻乐见的C语言举例（因为各个语言的实现不同，使用方式也不同，c语言能够将各个细节的参数给暴露出来）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这是创建socket文件描述符</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/socket.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">socket</span><span class="params">(<span class="type">int</span> domain, <span class="type">int</span> type, <span class="type">int</span> protocol)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>其中各个参数的意义如下（摘抄自<a target="_blank" rel="noopener" href="https://cnodejs.org/topic/5ae1f5da39a81e4548f45741">https://cnodejs.org/topic/5ae1f5da39a81e4548f45741</a>，改掉了其中的错误）：</p>
+<ul>
+<li><p><code>domain</code>：<strong>代表通讯所在的域</strong>，表示这个通讯是在哪个范围内进行，不同的域的通讯协议是不同的。 Unix中支持的<code>domain</code>的值和含义为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Name                Purpose                          Man page</span><br><span class="line">AF_UNIX, AF_LOCAL   Local communication              unix(7)</span><br><span class="line">AF_INET             IPv4 Internet protocols          ip(7)</span><br><span class="line">AF_INET6            IPv6 Internet protocols          ipv6(7)</span><br><span class="line">AF_IPX              IPX - Novell protocols</span><br><span class="line">AF_NETLINK          Kernel user interface device     netlink(7)</span><br><span class="line">AF_X25              ITU-T X.25 / ISO-8208 protocol   x25(7)</span><br><span class="line">AF_AX25             Amateur radio AX.25 protocol</span><br><span class="line">AF_ATMPVC           Access to raw ATM PVCs</span><br><span class="line">AF_APPLETALK        AppleTalk                        ddp(7)</span><br><span class="line">AF_PACKET           Low level packet interface       packet(7)</span><br><span class="line">AF_ALG              Interface to kernel crypto API</span><br></pre></td></tr></table></figure>
+
+<p>Unix支持多种类型的通讯域，其中<code>AF_UNIX</code>（本地通讯）、<code>AF_INET</code>（IP4通讯）、<code>AF_INET6</code>（IP6通讯）最为常见的，<code>AF</code>是address family的缩写，中文一般翻译为地址族，是指某种类型的地址的集合。例如AF_INET就是所有IPv4地址的集合，AF_LOCAL就是Unix Socket的集合（大部分为一个本地文件的路径）。我个人是这样理解的，<code>domain</code>指定的是一个通讯的范围或者空间，可以通过地址族来描述这个空间的范围（因为地址族就是所有通讯地址的集合），因此通过地址族来指定domain是很合理的</p>
+</li>
+<li><p><code>type</code> ：<strong>代表通讯数据的语意</strong>，所谓的“语意”我个人的理解是指：通讯前是否需要建立连接，通道是否双工，数据是否有序，通讯是否可靠。一开始我觉得这些不是协议的部分内容么，为何要在这里指定？后来再仔细想想这些其实和具体的协议是不相关的，协议的具体内容是构建于这些“语意”之上，“语意”比协议更加低层，它是socket进行数据交换的方式，而如何解读这些数据才是协议的事情。 Unix中支持的<code>type</code>的值和含义为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">SOCK_STREAM     Provides sequenced, reliable, two-way, connection-based byte streams.  An out-of-band data transmission mechanism may be supported.</span><br><span class="line"></span><br><span class="line">SOCK_DGRAM      Supports datagrams (connectionless, unreliable messages of a fixed maximum length).</span><br><span class="line"></span><br><span class="line">SOCK_SEQPACKET  Provides a sequenced, reliable, two-way connection-based data transmission path <span class="keyword">for</span> datagrams of fixed maximum length; a consumer is required  to  <span class="built_in">read</span>  an  entire packet with each input system call.</span><br><span class="line"></span><br><span class="line">SOCK_RAW        Provides raw network protocol access.</span><br><span class="line"></span><br><span class="line">SOCK_RDM        Provides a reliable datagram layer that does not guarantee ordering.</span><br><span class="line"></span><br><span class="line">SOCK_PACKET     Obsolete and should not be used <span class="keyword">in</span> new programs; see packet(7).</span><br></pre></td></tr></table></figure>
+
+<p><code>SOCK_STREAM</code>提供面向连接的、可靠的、顺序的字节流，因为流式数据没有提供定界功能，因此需要自己去处理数据重组，即所谓的“粘包”。<code>SOCK_DGRAM</code>提供无连接的、不可靠的、最大长度是确定的数据报。一种类型的<code>domain</code>可以选择不同的<code>type</code>，例如我们选择<code>AF_INET</code>类型的socket进行通讯，可以选择流式数据还是数据报数据。而网络编程中，TCP和UDP分别使用<code>SOCK_STREAM</code>和<code>SOCK_DGRAM</code>的方式进行通信。</p>
+</li>
+<li><p><code>protocol</code>：<strong>代表通讯所用的协议类型</strong><br> 一般来说对于某个给定的协议族，只有一个<code>protocal</code>和<code>domain</code>对应，在这种情况下你只需将<code>protocol</code>设为0系统就会自动为你选择适当的协议。但是理论上在一个协议族中，是有可能有多个<code>protocal</code>适用于同一个<code>domain</code>，此时需要显示指定<code>protocol</code>的值。</p>
+</li>
+</ul>
+<p>其实到这里，应该有人发现我的文章已经前后矛盾了，因为在我的例子中，我并没有给出我这样分类的依据，但是如果认真看过的人就会发现，在例子中提到了语义，在我看来，这就是一种分类，但是我最开始也是有不理解的地方，看到这个大佬的解释，其实这和<strong>一千个人眼里有一千个哈姆雷特</strong>是同一个道理，标准已经定好，怎么理解在于个人，这也是一个人自我思考能力的表现。（别说什么就是没有思考才来看文章，没思考你也看不懂）</p>
+<h3 id="3-3-总结"><a href="#3-3-总结" class="headerlink" title="3.3 总结"></a>3.3 总结</h3><p>在本文的两种分类归纳，其实就对应了<code>socket()</code>函数的两个参数<code>domain</code>和<code>type</code>，在实际的使用过程中，两者应该是交叉使用的，所以在开头我就有提到，事实上分类这个说法就不够准确。</p>
+<h2 id="四、使用"><a href="#四、使用" class="headerlink" title="四、使用"></a>四、使用</h2><p>使用方面其实没啥好讲的，本篇文章是我参考了十几个网页加上自己的理解才归纳出来，这是我认为能够讲清楚socket知识点的文章，所以并不准备放上使用细节，因为使用方面，也有标准，但是实际上在语言不同的时候细节也不一样，网上的文章也都是大同小异，这里就给个c语言的参考和Go的参考吧：</p>
+<p><a target="_blank" rel="noopener" href="https://cnodejs.org/topic/5ae1f5da39a81e4548f45741">https://cnodejs.org/topic/5ae1f5da39a81e4548f45741</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/liumiaocn/article/details/54849558">https://blog.csdn.net/liumiaocn/article/details/54849558</a></p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>本文就是希望能够讲清楚socket背后的故事，以及如何讲其与所学过的知识点联系起来，我写这篇文章的起因就是我因为某次面试被问及nginx的epoll网络模型，所以我准备看看多路复用的知识，但是在学习过程我无法理解为什么要用多路复用，直接的对比我能知道，但是在整体上有什么区别，然后我看到了一个说法是一个进程只能有一个socket，多路复用就是可以有多个socket，所以我想了解下socket的背后原理。</p>
+<p>其实本篇文章也没有能讲清楚socket的实现原理，只是在概念上梳理了一下，实现原理我认为其实涉及更多的是底层与操作系统打交道了，这就涉及更多的知识点，这里肯定是讲不完的，这篇文章主要希望能给和我有相同疑问的人们帮助，顺带我录了写这篇文章的视频，准备到b站上试试，自己本身是感兴趣的，给大家参考下写博客以及自己学习的方式。</p>
+<p>接下来我准备看看多路复用和进程间通信的一些知识，看看到底写这篇文章对我理解有没有帮助，刚好我在写完本篇文章时找到了一个完整联系的文章：<a target="_blank" rel="noopener" href="https://www.zmonster.me/notes/tcp-ip-socket-in-c.html">https://www.zmonster.me/notes/tcp-ip-socket-in-c.html</a></p>
+<blockquote>
+<p>顺带一提，还好我录了视频，不然这篇文章我都不想发了，因为我本地写markdown喜欢用typora，就在写完这篇文章的时候，我关掉了他准备用hexo上传到我的博客上，但是当我p好我的首页图时，发现文章内容少了一半，已经是晚上11点半了，我简直崩溃哦，原因就是typora不提供自动保存功能，反正我没找到，然后我对着视频又补充了一些东西，也算是再检查一遍吧。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/socket/" rel="tag"><i class="fa fa-tag"></i> socket</a>
+              <a href="/tags/tcp/" rel="tag"><i class="fa fa-tag"></i> tcp</a>
+              <a href="/tags/unix/" rel="tag"><i class="fa fa-tag"></i> unix</a>
+              <a href="/tags/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" rel="tag"><i class="fa fa-tag"></i> 网络编程</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/01/15/mysql/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E6%96%B9%E6%A1%88/" rel="prev" title="分库分表方案">
+                  <i class="fa fa-chevron-left"></i> 分库分表方案
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/02/26/linux/%E7%90%86%E8%A7%A3inode/" rel="next" title="理解inode">
+                  理解inode <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">78k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:10</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
