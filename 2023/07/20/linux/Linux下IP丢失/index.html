@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha256-AbA177XfpSnFEvgpYu1jMygiLabzPCJCRIBtR5jGc0k=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xemxx.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.13.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"style":null,"show_result":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="最近排查一个和网络相关的问题，学习到了一些dhcp和systemd-networkd 的一些知识，在这里记录分享一下  0x1 问题某日我们对一个机器做流量压测，然后机器负载拉满，ip无法访问，然后出现了再也无法通过ip访问的情况，ping也是不通的 0x2 排查机器ip不见了？ping不通，说明机器没有和ip绑定，进入机器后台（我们的场景是虚拟机，所以有管理平台进入后台） 进入后台，执行 ip">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux一次ip和默认网关丢失">
+<meta property="og:url" content="https://xemxx.github.io/2023/07/20/linux/Linux%E4%B8%8BIP%E4%B8%A2%E5%A4%B1/index.html">
+<meta property="og:site_name" content="Xem Blog">
+<meta property="og:description" content="最近排查一个和网络相关的问题，学习到了一些dhcp和systemd-networkd 的一些知识，在这里记录分享一下  0x1 问题某日我们对一个机器做流量压测，然后机器负载拉满，ip无法访问，然后出现了再也无法通过ip访问的情况，ping也是不通的 0x2 排查机器ip不见了？ping不通，说明机器没有和ip绑定，进入机器后台（我们的场景是虚拟机，所以有管理平台进入后台） 进入后台，执行 ip">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://qiniu.xemxx.cn/2023/07/21/1e31d3134ee8ee85fbdde201849f6dcc-04f851.png">
+<meta property="og:image" content="https://qiniu.xemxx.cn/2023/07/20/bddc3a1ff8a2a63c8befc428bf1d151e-a387e9.png">
+<meta property="og:image" content="https://qiniu.xemxx.cn/2023/07/21/d5b49633cd5afb6e104321f6157bff29-ae96a7.png">
+<meta property="og:image" content="https://qiniu.xemxx.cn/2023/07/21/e96213005978f2e7f4dd4446d1986bae-572803.png">
+<meta property="og:image" content="https://qiniu.xemxx.cn/2023/07/21/715be36b29644bf8cf468e1d69e366f2-76cd08.png">
+<meta property="og:image" content="https://qiniu.xemxx.cn/2023/07/21/a35567ade823889f5468033eb22ddeef-ca1a2e.png">
+<meta property="article:published_time" content="2023-07-20T14:57:10.000Z">
+<meta property="article:modified_time" content="2023-07-20T16:35:52.061Z">
+<meta property="article:author" content="Xem">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="network">
+<meta property="article:tag" content="dhcp">
+<meta property="article:tag" content="systemd-networkd">
+<meta property="article:tag" content="systemd">
+<meta property="article:tag" content="排查">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://qiniu.xemxx.cn/2023/07/21/1e31d3134ee8ee85fbdde201849f6dcc-04f851.png">
+
+
+<link rel="canonical" href="https://xemxx.github.io/2023/07/20/linux/Linux%E4%B8%8BIP%E4%B8%A2%E5%A4%B1/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://xemxx.github.io/2023/07/20/linux/Linux%E4%B8%8BIP%E4%B8%A2%E5%A4%B1/","path":"2023/07/20/linux/Linux下IP丢失/","title":"linux一次ip和默认网关丢失"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>linux一次ip和默认网关丢失 | Xem Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Xem Blog</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>Home</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>Tags</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>Categories</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="archive fa-fw"></i>Archives</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x1-%E9%97%AE%E9%A2%98"><span class="nav-text">0x1 问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x2-%E6%8E%92%E6%9F%A5"><span class="nav-text">0x2 排查</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%BA%E5%99%A8ip%E4%B8%8D%E8%A7%81%E4%BA%86%EF%BC%9F"><span class="nav-text">机器ip不见了？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#systemd-networkd-%E6%9C%8D%E5%8A%A1"><span class="nav-text">systemd-networkd 服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ip%E4%BC%9A%E8%87%AA%E5%8A%A8%E6%B8%85%E9%99%A4%EF%BC%9F"><span class="nav-text">ip会自动清除？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%81%A2%E5%A4%8Dip"><span class="nav-text">恢复ip</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x3-%E6%94%B6%E8%8E%B7"><span class="nav-text">0x3 收获</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#DHCP"><span class="nav-text">DHCP</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xem</p>
+  <div class="site-description" itemprop="description">分享技术学习路上的点滴</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">45</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/xemxx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;xemxx" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:1007441364@qq.com" title="E-Mail → mailto:1007441364@qq.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+        <div class="back-to-top animated" role="button" aria-label="Back to top">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://xemxx.github.io/2023/07/20/linux/Linux%E4%B8%8BIP%E4%B8%A2%E5%A4%B1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xem">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Xem Blog">
+      <meta itemprop="description" content="分享技术学习路上的点滴">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="linux一次ip和默认网关丢失 | Xem Blog">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux一次ip和默认网关丢失
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2023-07-20 22:57:10" itemprop="dateCreated datePublished" datetime="2023-07-20T22:57:10+08:00">2023-07-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">Edited on</span>
+      <time title="Modified: 2023-07-21 00:35:52" itemprop="dateModified" datetime="2023-07-21T00:35:52+08:00">2023-07-21</time>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>2.3k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>2 mins.</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <blockquote>
+<p>最近排查一个和网络相关的问题，学习到了一些dhcp和systemd-networkd 的一些知识，在这里记录分享一下</p>
+</blockquote>
+<h1 id="0x1-问题"><a href="#0x1-问题" class="headerlink" title="0x1 问题"></a>0x1 问题</h1><p>某日我们对一个机器做流量压测，然后机器负载拉满，ip无法访问，然后出现了再也无法通过ip访问的情况，ping也是不通的</p>
+<h1 id="0x2-排查"><a href="#0x2-排查" class="headerlink" title="0x2 排查"></a>0x2 排查</h1><h2 id="机器ip不见了？"><a href="#机器ip不见了？" class="headerlink" title="机器ip不见了？"></a>机器ip不见了？</h2><p>ping不通，说明机器没有和ip绑定，进入机器后台（我们的场景是虚拟机，所以有管理平台进入后台）</p>
+<p>进入后台，执行 ip a  命令，大致如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">eth0: ....</span><br><span class="line"><span class="built_in">link</span>/ether ...</span><br></pre></td></tr></table></figure>
+
+<p>一个很关键的问题在于，没有ip地址，正常如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2: enp9s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP group default qlen 1000</span><br><span class="line">    <span class="built_in">link</span>/ether ....</span><br><span class="line">    inet 192.168.123.99/24 brd 192.168.123.255 scope global dynamic noprefixroute enp9s0</span><br><span class="line">       valid_lft 37780sec preferred_lft 37780sec</span><br></pre></td></tr></table></figure>
+
+<p>再通过<code>ip r</code> 查看网关，如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">172.17.0.0/16 ....</span><br></pre></td></tr></table></figure>
+
+<p>发现没有default网关的路由，可能有其他的一些虚拟网卡网桥的东西，比如docker创建的之类的</p>
+<p>说明系统的网络服务出现了问题，没有自动去获取dhcp 的ip，或者静态ip服务也没有设置正常，那么就继续排查网络服务</p>
+<h2 id="systemd-networkd-服务"><a href="#systemd-networkd-服务" class="headerlink" title="systemd-networkd 服务"></a>systemd-networkd 服务</h2><p>linux常见管理网络的方式有三种</p>
+<ol>
+<li><p>network服务</p>
+</li>
+<li><p>systemd-networkd 服务</p>
+</li>
+<li><p>NetworkManager 服务</p>
+</li>
+</ol>
+<p>这三者都可以通过systemd来管理</p>
+<ol>
+<li><p>第一种是最初直接设置网卡的方式，它实际上就是个脚本，每次开机自动配置一下网卡，通过dhcp或者静态ip的方式，如果是dhcp后续就会自动续约之类的</p>
+</li>
+<li><p>第二种就是systemd自带的网路管理，也是通过一个配置文件来处理，它通常会有后台服务，定期获取dhcp的状态并处理，其实和network没有太大差别</p>
+</li>
+<li><p>第三种其实主要是附加了一些自动化的功能，常见于桌面端，因为提供了一些图形化界面，并且会自动发现网卡并配置，服务端用的比较少</p>
+</li>
+</ol>
+<p>这里的服务其实是采用了第一种的静态ip和第二种的dhcp混合的方式</p>
+<p>首先查看 systemd-networkd 服务日志：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">eth0: DHCP Addrees <span class="built_in">set</span> failed: connect <span class="built_in">timeout</span></span><br><span class="line">eth0: Failed</span><br></pre></td></tr></table></figure>
+
+<p>最主要的就是这两条，能的到的信息如下：</p>
+<ol>
+<li><p>systemd-networkd 在这个时候dhcp租约到期了，需要重新申请IP，但是访问 dhcp 服务器超时了</p>
+</li>
+<li><p>systemd-networkd 不会再去处理关于 eth0 网卡的配置了</p>
+</li>
+</ol>
+<p>此外，我们在 <code>/etc/sysconfig/network-scripts/ifcfg-eth0</code> 能看到静态ip的配置，说明这个系统同时启用了 network 服务来配置静态ip，但是这个静态ip只会配置一次，即系统启动之时</p>
+<p>由于内部特殊组件的原因，这里不方便展开说，最终我们定位这时候的ip和网关丢失与该服务无关</p>
+<p>那么为什么systemd-networkd在超时之后为什么会清除网卡ip和默认网关呢？</p>
+<p>查源码是一个很烦的事情，我们更希望从其他的特征中发现这个问题</p>
+<h2 id="ip会自动清除？"><a href="#ip会自动清除？" class="headerlink" title="ip会自动清除？"></a>ip会自动清除？</h2><p>再仔细观察我们的 ip a 的输出，会发现它有一个很特殊的行</p>
+<p><img src="https://qiniu.xemxx.cn/2023/07/21/1e31d3134ee8ee85fbdde201849f6dcc-04f851.png"></p>
+<p>这是啥，好像超出理解范围了，通过文心一言的问答，如下</p>
+<p><img src="https://qiniu.xemxx.cn/2023/07/20/bddc3a1ff8a2a63c8befc428bf1d151e-a387e9.png"></p>
+<ol>
+<li><p>valid_lft 代表这个 IP 的可使用时长</p>
+</li>
+<li><p>preferred_lft 代表这个 IP 的优先使用时长</p>
+</li>
+</ol>
+<p>简单理解，就是第一个时间代表了这个ip可以用多久，第二个代表了这个ip在多久之内是优先使用的</p>
+<p>这好像就对上了，它会自动清除</p>
+<p>实验一下，将时间调整为 10s 和 5s</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ip a change dev enp0s3 10.0.2.6/24 valid_lft 10 preferred_lft 5</span><br></pre></td></tr></table></figure>
+
+<p>得到如下结果：</p>
+<p><img src="https://qiniu.xemxx.cn/2023/07/21/d5b49633cd5afb6e104321f6157bff29-ae96a7.png"></p>
+<p>时间流逝</p>
+<p><img src="https://qiniu.xemxx.cn/2023/07/21/e96213005978f2e7f4dd4446d1986bae-572803.png"></p>
+<p>ip 自动丢失，默认网关路由也消失，也就验证了我们的猜想</p>
+<h2 id="恢复ip"><a href="#恢复ip" class="headerlink" title="恢复ip"></a>恢复ip</h2><p>只需要重启 systemd-networkd 服务即可</p>
+<p><img src="https://qiniu.xemxx.cn/2023/07/21/715be36b29644bf8cf468e1d69e366f2-76cd08.png"></p>
+<h1 id="0x3-收获"><a href="#0x3-收获" class="headerlink" title="0x3 收获"></a>0x3 收获</h1><p>实际上整个问题非常简单，难点在于</p>
+<ol>
+<li><p>对这几个组件一无所知，Linux下的网络管理方式和配置方式</p>
+</li>
+<li><p>DHCP又是怎么实现的</p>
+</li>
+<li><p>IP竟然还有有效期会自动消失</p>
+</li>
+</ol>
+<p>事实上DHCP这里我没有展开讲，因为中间我忽略了踩坑的过程，开始我试图复现错误日志中的超时问题，利用iptables对 dhcp 的 67 和 68 端口做丢包处理，结果我意外的发现，systemd-networkd这个服务竟然还能正确获取到ip地址，这一点真的很神奇，可能需要进一步了解其工作原理</p>
+<h2 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h2><p>DHCP的服务过程大概如下：</p>
+<ol>
+<li><p>客户端发起一个广播，找dhcp服务器</p>
+</li>
+<li><p>dhcp服务器收到请求，知道了对方的mac地址，然后尝试提供一个ip地址和网关信息，并继续广播一个分配的请求</p>
+</li>
+<li><p>客户端收到广播后确认这个ip可以，就继续广播一个请求说自己收到了并且需要使用这个</p>
+</li>
+<li><p>服务端收到这个广播之后继续广播一个请求，ACK确认</p>
+</li>
+</ol>
+<p>然后有个特殊点在于，在租期的 0.5 和 0.875 节点时，客户端会尝试续约，但是这个时候是单播的，为什么前面全部用广播是因为客户端没有一个分配好的ip地址</p>
+<p>大家其实会有一个讨论点在于dhcp服务端第一次分配ip的时候是广播还是单播，这里我实测抓包了一下，从目的ip的角度来说，确实全部为广播，因为在网络中可能有多个dhcp服务器回包，客户端会选择第一个接受到的，然后广播说自己选择了哪一个，从逻辑上讲，没有完成整个过程之前，这个客户端都是没有自己的ip的，所以就应该使用广播</p>
+<p><img src="https://qiniu.xemxx.cn/2023/07/21/a35567ade823889f5468033eb22ddeef-ca1a2e.png"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"><i class="fa fa-tag"></i> linux</a>
+              <a href="/tags/network/" rel="tag"><i class="fa fa-tag"></i> network</a>
+              <a href="/tags/dhcp/" rel="tag"><i class="fa fa-tag"></i> dhcp</a>
+              <a href="/tags/systemd-networkd/" rel="tag"><i class="fa fa-tag"></i> systemd-networkd</a>
+              <a href="/tags/systemd/" rel="tag"><i class="fa fa-tag"></i> systemd</a>
+              <a href="/tags/%E6%8E%92%E6%9F%A5/" rel="tag"><i class="fa fa-tag"></i> 排查</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2022/09/06/%E6%8C%87%E5%AF%BC/%E5%A4%A7%E5%AD%A6%E7%94%9F%E8%B4%AD%E6%9C%BA%E6%8C%87%E5%8D%97/" rel="prev" title="大学生购机指南">
+                  <i class="fa fa-chevron-left"></i> 大学生购机指南
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 2017 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">xem</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>Symbols count total: </span>
+    <span title="Symbols count total">80k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>Reading time total &asymp;</span>
+    <span title="Reading time total">1:13</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
